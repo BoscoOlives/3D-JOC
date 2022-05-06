@@ -14,12 +14,17 @@ Mesh* mesh = NULL;
 Mesh* mesh2 = NULL;
 Mesh* mesh_island = NULL;
 Mesh* mesh_plane = NULL;
+Mesh* mesh_bomb = NULL;
 
 Texture* texture = NULL;
 Texture* texture_island = NULL;
 Texture* texture_plane = NULL;
+Texture* texture_bomb = NULL;
 Matrix44 planeModel; // NO HA DE QUEDAR AQUI
+Matrix44 bombModel;
+Matrix44 bombOffset;
 bool cameraLocked = true;
+bool bombAttached = true;
 
 Shader* shader = NULL;
 
@@ -49,6 +54,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	glEnable( GL_CULL_FACE ); //render both sides of every triangle
 	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
 
+    bombOffset.setTranslation(0.0f, -2.0f, 0.0f);
+    
 	//create our camera
 	camera = new Camera();
 	camera->lookAt(Vector3(0.f,100.f, 100.f),Vector3(0.f,0.f,0.f), Vector3(0.f,1.f,0.f)); //position the camera and point to 0,0,0
@@ -69,7 +76,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	texture_plane = Texture::Get("data/spitfire/spitfire_color_spec.tga");
 	mesh_plane = Mesh::Get("data/spitfire/spitfire.ASE");
 
-
+    texture_bomb = Texture::Get("data/torpedo_bullet/torpedo.tga");
+    mesh_bomb = Mesh::Get("data/torpedo_bullet/torpedo.ASE");
+    
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
@@ -168,6 +177,7 @@ void Game::render(void)
 	mesh_island->renderBounding(islandModel);
 	//Render PLANE		
 	RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
+    RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
 
 
 	//Draw the floor grid
@@ -222,6 +232,22 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
+    
+    if (Input::wasKeyPressed(SDL_SCANCODE_F))
+    {
+        bombAttached = false;
+    }
+    
+    if (bombAttached)
+    {
+        bombModel = bombOffset * planeModel;
+    }
+    else
+    {
+        bombModel.translateGlobal(0.0f, -9.8f * elapsed_time, 0.0f);
+    }
+    
+    
 	//to navigate with the mouse fixed in the middle
 	if (mouse_locked)
 		Input::centerMouse();
