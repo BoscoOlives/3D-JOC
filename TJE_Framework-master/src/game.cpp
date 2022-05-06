@@ -36,6 +36,13 @@ FBO* fbo = NULL;
 
 Game* Game::instance = NULL;
 
+const int planes_width = 200;
+const int planes_height = 200;
+float padding = 20.0f;
+
+float lod_distance = 200.0f;
+float no_render_distance = 1000.0f;
+
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
 	this->window_width = window_width;
@@ -84,6 +91,60 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
+}
+
+
+void RenderPlanes()
+{
+    //enable shader
+    shader->enable();
+    Camera* cam = Game::instance->camera;
+    float time = Game::instance->time;
+    //upload uniforms
+    shader->setUniform("u_color", Vector4(1, 1, 1, 1));
+    shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
+    shader->setUniform("u_texture", texture_plane, 0);
+    shader->setUniform("u_time", time);
+
+    Matrix44 m;
+    for (size_t i = 0; i < planes_width; i++)
+    {
+        for (size_t j = 0; j < planes_height; j++)
+        {
+            Matrix44 model;
+            model.translate(i * padding, 0.0f, j * padding);
+            
+            Vector3 planePos = model.getTranslation();
+            
+            if(!cam->testPointInFrustum(planePos)) {
+                continue;
+            }
+            
+            Vector3 camPos = cam->eye;
+            
+            float dist = planePos.distance(camPos);
+            
+            if(dist > no_render_distance) {
+                continue;
+            }
+            
+            Mesh* mesh = Mesh::Get("data/spitfire/spitfire_low.ASE");
+            if(dist < lod_distance) {
+                mesh = Mesh::Get("data/spitfire/spitfire_low.ASE");
+            }
+            
+            BoundingBox worldAABB = transformBoundingBox(model, mesh->box);
+            if (!cam->testBoxInFrustum(worldAABB.center, worldAABB.halfsize)) {
+                continue;
+            }
+            
+            shader->setUniform("u_model", model);
+            mesh->render(GL_TRIANGLES);
+        }
+    }
+
+    //disable shader
+    shader->disable();
 }
 
 void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
@@ -176,9 +237,9 @@ void Game::render(void)
 	RenderMesh(islandModel, mesh_island, texture_island, shader, camera);
 	mesh_island->renderBounding(islandModel);
 	//Render PLANE		
-	RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
-    RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
-
+	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
+    //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
+    RenderPlanes();
 
 	//Draw the floor grid
 	drawGrid();
