@@ -9,17 +9,21 @@
 
 #include <cmath>
 
+//#define EDITOR
+
 //some globals
 Mesh* mesh = NULL;
 Mesh* mesh2 = NULL;
 Mesh* mesh_island = NULL;
 Mesh* mesh_plane = NULL;
 Mesh* mesh_bomb = NULL;
+Mesh* mesh_car = NULL;
 
 Texture* texture = NULL;
 Texture* texture_island = NULL;
 Texture* texture_plane = NULL;
 Texture* texture_bomb = NULL;
+Texture* texture_car = NULL;
 Matrix44 planeModel; // NO HA DE QUEDAR AQUI
 Matrix44 bombModel;
 Matrix44 bombOffset;
@@ -42,6 +46,23 @@ float padding = 20.0f;
 
 float lod_distance = 200.0f;
 float no_render_distance = 1000.0f;
+
+
+class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES ENTITATS I UN IDENTIFICADOR
+	int id;
+	Mesh* mesh;
+	Texture* texture;
+};
+Prop props[20];
+
+
+class Entity {
+public:
+	Matrix44 model;
+	Mesh* mesh;
+	Texture* texture;
+};
+std::vector<Entity*> entities;
 
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
@@ -85,6 +106,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
     texture_bomb = Texture::Get("data/torpedo_bullet/torpedo.tga");
     mesh_bomb = Mesh::Get("data/torpedo_bullet/torpedo.ASE");
+
+	texture_car = Texture::Get("data/cart.png");
+	mesh_car = Mesh::Get("data/cart.obj");
     
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
@@ -196,6 +220,26 @@ void RenderIslands() {
 		shader->disable();
 	}
 }
+
+void AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture) {
+	Vector2 mousePos = Input::mouse_position;
+	Game* g = Game::instance;
+	Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
+	Vector3 rayOrigin = cam->eye;
+
+	
+	Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+	Matrix44 model;
+	model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
+
+
+	Entity* entity = new Entity;
+	entity->model = model;
+	entity->mesh = mesh;
+	entity->texture = texture;
+	entities.push_back(entity);
+}
+
 //what to do when the image has to be draw
 void Game::render(void)
 {
@@ -240,6 +284,12 @@ void Game::render(void)
 	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
     //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
     RenderPlanes();
+
+	
+	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
+		Entity* entity = entities[i];
+		RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
+	}
 
 	//Draw the floor grid
 	drawGrid();
@@ -321,6 +371,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break; 
+		case SDLK_2: AddEntityInFront(camera, mesh_car, texture_car); break; // amb la tecla 2 creem ENTITATS on estigui el mouse. 
 	}
 }
 
