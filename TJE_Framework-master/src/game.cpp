@@ -172,7 +172,7 @@ void RenderPlanes()
 }
 
 void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
-	//assert(a_mesh != null, "mesh in renderMesh was null");
+	assert((a_mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 	
 	float time = Game::instance->time;
