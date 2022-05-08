@@ -245,7 +245,7 @@ bool Texture::load(const char* filename, bool mipmaps, bool wrap, unsigned int t
 	if (ext == ".tga" || ext == ".TGA")
 		found = image->loadTGA(filename);
 	else if (ext == ".png" || ext == ".PNG")
-		found = image->loadPNG(filename);
+		found = image->loadPNG(filename, true);
 	else if (ext == ".jpg" || ext == ".JPG" || ext == "JPEG" || ext == "jpeg")
 		found = image->loadJPG(filename);
 	else
@@ -731,7 +731,7 @@ bool Image::loadPNG(const char* filename, bool flip_y)
 	std::vector<unsigned char> buffer;
 	if (!readFileBin(filename, buffer))
 		return false;
-	return loadPNG(buffer);
+	return loadPNG(buffer, flip_y);
 }
 
 bool Image::loadPNG(std::vector<unsigned char>& buffer, bool flip_y)

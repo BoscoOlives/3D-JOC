@@ -18,12 +18,14 @@ Mesh* mesh_island = NULL;
 Mesh* mesh_plane = NULL;
 Mesh* mesh_bomb = NULL;
 Mesh* mesh_car = NULL;
+Mesh* mesh_penguin = NULL;
 
 Texture* texture = NULL;
 Texture* texture_island = NULL;
 Texture* texture_plane = NULL;
 Texture* texture_bomb = NULL;
 Texture* texture_car = NULL;
+Texture* texture_penguin = NULL;
 Matrix44 planeModel; // NO HA DE QUEDAR AQUI
 Matrix44 bombModel;
 Matrix44 bombOffset;
@@ -109,6 +111,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	texture_car = Texture::Get("data/cart.png");
 	mesh_car = Mesh::Get("data/cart.obj");
+    
+    texture_penguin = Texture::Get("data/color-atlas-new.png");
+    mesh_penguin =Mesh::Get("data/penguin_20.obj");
     
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
@@ -370,8 +375,9 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	switch(event.keysym.sym)
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
-		case SDLK_F1: Shader::ReloadAll(); break; 
-		case SDLK_2: AddEntityInFront(camera, mesh_car, texture_car); break; // amb la tecla 2 creem ENTITATS on estigui el mouse. 
+		case SDLK_F1: Shader::ReloadAll(); break;
+        case SDLK_2: AddEntityInFront(camera, mesh_penguin, texture_penguin); break;
+		//case SDLK_2: AddEntityInFront(camera, mesh_car, texture_car); break; // amb la tecla 2 creem ENTITATS on estigui el mouse.
 	}
 }
 
