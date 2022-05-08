@@ -8,7 +8,7 @@
 #include "includes.h"
 #include "camera.h"
 #include "utils.h"
-
+#include "entity.h"
 class Game
 {
 public:
@@ -29,6 +29,9 @@ public:
 	//some vars
 	Camera* camera; //our global camera
 	bool mouse_locked; //tells if the mouse is locked (not seen)
+
+	//Variables	BOSCO &	RICCI
+	std::vector<Entity*> entities;
 
 	Game( int window_width, int window_height, SDL_Window* window );
 

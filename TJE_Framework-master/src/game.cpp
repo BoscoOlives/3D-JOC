@@ -7,6 +7,7 @@
 #include "input.h"
 #include "animation.h"
 
+
 #include <cmath>
 
 //#define EDITOR
@@ -58,13 +59,13 @@ class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES EN
 Prop props[20];
 
 
-class Entity {
-public:
-	Matrix44 model;
-	Mesh* mesh;
-	Texture* texture;
-};
-std::vector<Entity*> entities;
+//class Entity {
+//public:
+//	Matrix44 model;
+//	Mesh* mesh;
+//	Texture* texture;
+//};
+
 
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
@@ -102,6 +103,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
 	texture_island =Texture::Get("data/island/island_color.tga");
 	mesh_island = Mesh::Get("data/island/island.ASE");
+
+	entities = AddEntityInFront(camera, mesh_island, texture_island, entities);
 
 	texture_plane = Texture::Get("data/spitfire/spitfire_color_spec.tga");
 	mesh_plane = Mesh::Get("data/spitfire/spitfire.ASE");
@@ -176,24 +179,24 @@ void RenderPlanes()
     shader->disable();
 }
 
-void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
-	assert((a_mesh != NULL, "mesh in renderMesh was null"));
-	if (!a_shader) return;
-	
-	float time = Game::instance->time;
-	//enable shader
-	a_shader->enable();
-
-	//upload uniforms
-	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
-	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
-	a_shader->setUniform("u_texture", tex, 0);
-	a_shader->setUniform("u_time", time);
-	a_shader->setUniform("u_model", model);
-	a_mesh->render(GL_TRIANGLES);
-
-	a_shader->disable();
-}
+//void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
+//	assert((a_mesh != NULL, "mesh in renderMesh was null"));
+//	if (!a_shader) return;
+//	
+//	float time = Game::instance->time;
+//	//enable shader
+//	a_shader->enable();
+//
+//	//upload uniforms
+//	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
+//	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
+//	a_shader->setUniform("u_texture", tex, 0);
+//	a_shader->setUniform("u_time", time);
+//	a_shader->setUniform("u_model", model);
+//	a_mesh->render(GL_TRIANGLES);
+//
+//	a_shader->disable();
+//}
 
 void RenderIslands() {
 
@@ -226,24 +229,6 @@ void RenderIslands() {
 	}
 }
 
-void AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture) {
-	Vector2 mousePos = Input::mouse_position;
-	Game* g = Game::instance;
-	Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
-	Vector3 rayOrigin = cam->eye;
-
-	
-	Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
-	Matrix44 model;
-	model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
-
-
-	Entity* entity = new Entity;
-	entity->model = model;
-	entity->mesh = mesh;
-	entity->texture = texture;
-	entities.push_back(entity);
-}
 
 //what to do when the image has to be draw
 void Game::render(void)
@@ -282,9 +267,9 @@ void Game::render(void)
 	
 	//RENDER ISLANDS
 	//RenderIslands();
-	Matrix44 islandModel;
+	/*Matrix44 islandModel;
 	RenderMesh(islandModel, mesh_island, texture_island, shader, camera);
-	mesh_island->renderBounding(islandModel);
+	mesh_island->renderBounding(islandModel);*/
 	//Render PLANE		
 	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
     //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
@@ -293,7 +278,8 @@ void Game::render(void)
 	
 	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
 		Entity* entity = entities[i];
-		RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
+		entity->RenderEntity(shader, camera);
+		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
 
 	//Draw the floor grid
@@ -376,7 +362,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: AddEntityInFront(camera, mesh_penguin, texture_penguin); break;
+        case SDLK_2: entities = AddEntityInFront(camera, mesh_penguin, texture_penguin, entities); break;
 		//case SDLK_2: AddEntityInFront(camera, mesh_car, texture_car); break; // amb la tecla 2 creem ENTITATS on estigui el mouse.
 	}
 }
@@ -384,7 +370,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 void Game::onKeyUp(SDL_KeyboardEvent event)
 {
 }
-
+ 
 void Game::onGamepadButtonDown(SDL_JoyButtonEvent event)
 {
 
