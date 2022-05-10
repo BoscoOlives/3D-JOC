@@ -11,6 +11,7 @@
 .inc
 xcode/
 visualstudio/
+src/extra/
 *.ipch
 *.db
 *.exe
