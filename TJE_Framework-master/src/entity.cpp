@@ -14,7 +14,7 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 
 
 void Entity::RenderEntity(Shader* a_shader, Camera* cam) {
-	assert((a_mesh != NULL, "mesh in renderMesh was null"));
+	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
 	float time = Game::instance->time;
