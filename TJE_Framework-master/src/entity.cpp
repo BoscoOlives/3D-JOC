@@ -13,7 +13,7 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 }
 
 
-void Entity::RenderEntity(Shader* a_shader, Camera* cam) {
+void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam) {
 	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
@@ -25,13 +25,16 @@ void Entity::RenderEntity(Shader* a_shader, Camera* cam) {
 	//upload uniforms
 	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
 	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
-	a_shader->setUniform("u_texture", texture, 0);
+	if (texture != NULL) {
+		a_shader->setUniform("u_texture", texture, 0);
+	}
 	a_shader->setUniform("u_time", time);
 	a_shader->setUniform("u_model", model);
-	mesh->render(GL_TRIANGLES);
+	mesh->render(primitive);
 
 	a_shader->disable();
 }
+
 
 std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities) {
 	Vector2 mousePos = Input::mouse_position;
@@ -49,5 +52,23 @@ std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture,
 	entities.push_back(entity);
 
 	return entities;
+}
+
+std::vector<Vector3> RayPickCheck(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities) {
+	Vector2 mousePos = Input::mouse_position;
+	Game* g = Game::instance;
+	Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
+	Vector3 rayOrigin = cam->eye;
+
+	for (size_t i = 0; i < entities.size(); i++)
+	{
+		Entity* entity = entities[i];
+		Vector3 pos;
+		Vector3 normal;
+		if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
+			points.push_back(pos);
+		}
+	}
+	return points;
 }
 

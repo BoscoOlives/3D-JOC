@@ -8,6 +8,7 @@
 #include "animation.h"
 
 
+
 #include <cmath>
 
 //#define EDITOR
@@ -30,7 +31,7 @@ Texture* texture_penguin = NULL;
 Matrix44 planeModel; // NO HA DE QUEDAR AQUI
 Matrix44 bombModel;
 Matrix44 bombOffset;
-bool cameraLocked = true;
+bool cameraLocked = false;
 bool bombAttached = true;
 
 Shader* shader = NULL;
@@ -103,8 +104,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
 	texture_island =Texture::Get("data/island/island_color.tga");
 	mesh_island = Mesh::Get("data/island/island.ASE");
-
-	entities = AddEntityInFront(camera, mesh_island, texture_island, entities);
 
 	texture_plane = Texture::Get("data/spitfire/spitfire_color_spec.tga");
 	mesh_plane = Mesh::Get("data/spitfire/spitfire.ASE");
@@ -273,14 +272,21 @@ void Game::render(void)
 	//Render PLANE		
 	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
     //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
-    RenderPlanes();
+    //RenderPlanes();
 
 	
 	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
 		Entity* entity = entities[i];
-		entity->RenderEntity(shader, camera);
+		entity->RenderEntity(GL_TRIANGLES, shader, camera);
 		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
+	Mesh m;
+	m.vertices = points;
+	Entity* point = new Entity(Matrix44(), &m, NULL);
+	glPointSize(4.0f);
+	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera);
+	glPointSize(1.0f);
+
 
 	//Draw the floor grid
 	drawGrid();
@@ -362,8 +368,8 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: entities = AddEntityInFront(camera, mesh_penguin, texture_penguin, entities); break;
-		//case SDLK_2: AddEntityInFront(camera, mesh_car, texture_car); break; // amb la tecla 2 creem ENTITATS on estigui el mouse.
+        case SDLK_2: entities = AddEntityInFront(camera, mesh_plane, texture_plane, entities); break;
+		case SDLK_3: points = RayPickCheck(camera, points, entities); break;
 	}
 }
 
