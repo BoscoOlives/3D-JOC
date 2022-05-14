@@ -67,6 +67,16 @@ Prop props[20];
 //	Texture* texture;
 //};
 
+struct Player {
+    Vector3 pos;
+    float yaw;
+};
+Player player;
+
+const bool firstPerson = true;
+
+Mesh* mesh_ground;
+Texture* texture_ground;
 
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
@@ -92,6 +102,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	camera = new Camera();
 	camera->lookAt(Vector3(0.f,100.f, 100.f),Vector3(0.f,0.f,0.f), Vector3(0.f,1.f,0.f)); //position the camera and point to 0,0,0
 	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,100000.f); //set the projection, we want to be perspective
+    
+    
+    
+    mesh_ground = new Mesh();
+    mesh_ground->createPlane(1000);
+    texture_ground = Texture::Get("data/ground.tga");
 
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 	//texture = new Texture();
@@ -181,7 +197,7 @@ void RenderPlanes()
 //void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
 //	assert((a_mesh != NULL, "mesh in renderMesh was null"));
 //	if (!a_shader) return;
-//	
+//
 //	float time = Game::instance->time;
 //	//enable shader
 //	a_shader->enable();
@@ -228,8 +244,8 @@ void RenderIslands() {
 	}
 }
 
-
 //what to do when the image has to be draw
+int hola = 0;
 void Game::render(void)
 {
 	//set the clear color (the background color)
@@ -247,8 +263,18 @@ void Game::render(void)
 	glDisable(GL_CULL_FACE);
    
 	camera->enable();
-
-	//create model matrix for cube
+    
+    Texture* texture_sky = Texture::Get("data/sky/sky.tga");
+    Mesh* mesh_sky = Mesh::Get("data/sky/sky.ASE");
+    Matrix44 skyModel;
+    skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
+    Entity background = Entity(skyModel, mesh_sky, texture_sky);
+    glDisable(GL_DEPTH_TEST);
+    background.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+    glEnable(GL_DEPTH_TEST);
+    
+    Entity ground = Entity(Matrix44(), mesh_ground, texture_ground);
+    ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	//Matrix44 m;
 	//m.rotate(angle*DEG2RAD, Vector3(0, 1, 0));
 
@@ -258,9 +284,12 @@ void Game::render(void)
 	//m2.scale(100, 100, 100);
 	
 	if (cameraLocked) {
-		Vector3 eye = planeModel * Vector3(0.0f, 9.0f, 16.0f);
-		Vector3 center = planeModel * Vector3(0.0f, 0.0f, -20.0f);
-		Vector3 up = planeModel.rotateVector(Vector3(0.0f, 1.0f, 0.0f));	
+		Vector3 eye = playerModel * Vector3(0,3,3);
+		Vector3 center = playerModel * Vector3(0,0,-5);
+        Vector3 up = Vector3(0,1,0);
+        
+        if (hola%300 == 0) printf("eye: (%f, %f, %f), center: (%f, %f, %f)\n", eye.x, eye.y, eye.z, center.x, center.y, center.z);
+        
 		camera->lookAt(eye, center, up);
 	}
 	
@@ -273,18 +302,25 @@ void Game::render(void)
 	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
     //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
     //RenderPlanes();
-
-	
+    
+    //CREAR JUGADOR
+    //PlayerModel creat al game.h
+    playerModel.translate(player.pos.x, player.pos.y, player.pos.z);
+    playerModel.rotate(player.yaw * DEG2RAD, Vector3(0, 1, 0));
+    Entity player = Entity(playerModel, mesh_plane, texture_plane);
+    player.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+    
+    
 	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
 		Entity* entity = entities[i];
-		entity->RenderEntity(GL_TRIANGLES, shader, camera);
+		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
 	Mesh m;
 	m.vertices = points;
 	Entity* point = new Entity(Matrix44(), &m, NULL);
 	glPointSize(4.0f);
-	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera);
+	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera, cameraLocked);
 	glPointSize(1.0f);
 
 
@@ -296,6 +332,8 @@ void Game::render(void)
 
 	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
+    
+    hola++;
 }
 
 void Game::update(double seconds_elapsed)
@@ -317,17 +355,26 @@ void Game::update(double seconds_elapsed)
 		cameraLocked = !cameraLocked;
 	}
 
-	if (cameraLocked) {
-		float planeSpeed = 50.0f * elapsed_time;
-		float rotSpeed = 90.0f * DEG2RAD * elapsed_time;
-		if (Input::isKeyPressed(SDL_SCANCODE_W) ) planeModel.translate(0.0f, 0.0f, -planeSpeed);
-		if (Input::isKeyPressed(SDL_SCANCODE_S)) planeModel.translate(0.0f, 0.0f, planeSpeed);
+	if (cameraLocked) { //moviment player
+		float playerSpeed = 8.0f * elapsed_time;
+		float rotSpeed = 200.0f * DEG2RAD * elapsed_time;
+        
+        if (Input::isKeyPressed(SDL_SCANCODE_E)) player.yaw = player.yaw + rotSpeed;
+        if (Input::isKeyPressed(SDL_SCANCODE_Q)) player.yaw = player.yaw - rotSpeed;
+        
+        Matrix44 playerRotation;
+        playerRotation.rotate(player.yaw * DEG2RAD, Vector3(0,1,0));
+        
+        Vector3 forward = playerRotation.rotateVector(Vector3(0,0,-1));
+        Vector3 right = playerRotation.rotateVector(Vector3(1,0,0));
+        Vector3 playerVel;
+        
+        if (Input::isKeyPressed(SDL_SCANCODE_W)) playerVel = playerVel + (playerSpeed * forward);
+        if (Input::isKeyPressed(SDL_SCANCODE_S)) playerVel = playerVel - (playerSpeed * forward);
+        if (Input::isKeyPressed(SDL_SCANCODE_A)) playerVel = playerVel + (playerSpeed * right);
+        if (Input::isKeyPressed(SDL_SCANCODE_D)) playerVel = playerVel - (playerSpeed * right);
 
-		
-		if (Input::isKeyPressed(SDL_SCANCODE_A)) planeModel.rotate(-rotSpeed, Vector3(0.0f, 1.0f, 0.0f));
-		if (Input::isKeyPressed(SDL_SCANCODE_D)) planeModel.rotate(rotSpeed, Vector3(0.0f, 1.0f, 0.0f));
-		if (Input::isKeyPressed(SDL_SCANCODE_E)) planeModel.rotate(rotSpeed, Vector3(0.0f, 0.0f, 1.0f));
-		if (Input::isKeyPressed(SDL_SCANCODE_Q)) planeModel.rotate(-rotSpeed, Vector3(0.0f, 0.0f, 1.0f));
+        player.pos = player.pos + playerVel;
 	}
 	else {
 		//async input to move the camera around
@@ -369,7 +416,11 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
         case SDLK_2: entities = AddEntityInFront(camera, mesh_plane, texture_plane, entities); break;
-		case SDLK_3: points = RayPickCheck(camera, points, entities); break;
+        case SDLK_3: selectedEntity = RayPick(camera, points, entities, selectedEntity);
+            if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
+            break;
+        case SDLK_4: RotateSelected(10.0f, selectedEntity); break;
+        case SDLK_5: RotateSelected(-10.0f, selectedEntity); break;
 	}
 }
 

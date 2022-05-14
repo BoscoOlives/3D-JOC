@@ -230,7 +230,7 @@ void Mesh::render(unsigned int primitive, int submesh_id, int num_instances)
 		assert(0 && "no shader or shader not compiled or enabled");
 		return;
 	}
-	assert((interleaved.size() || vertices.size()) && "No vertices in this mesh");
+	//assert((interleaved.size() || vertices.size()) && "No vertices in this mesh");
 
 	//bind buffers to attribute locations
 	enableBuffers(shader);

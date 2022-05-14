@@ -33,6 +33,8 @@ public:
 	//Variables	BOSCO &	RICCI
 	std::vector<Entity*> entities;
 	std::vector<Vector3> points;
+    Entity* selectedEntity = NULL;
+    Matrix44 playerModel;
 
 	Game( int window_width, int window_height, SDL_Window* window );
 

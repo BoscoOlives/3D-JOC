@@ -13,7 +13,7 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 }
 
 
-void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam) {
+void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cameraLocked, float tiling) {
 	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
@@ -29,10 +29,15 @@ void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam) {
 		a_shader->setUniform("u_texture", texture, 0);
 	}
 	a_shader->setUniform("u_time", time);
+    a_shader->setUniform("u_tex_tiling", tiling);
 	a_shader->setUniform("u_model", model);
 	mesh->render(primitive);
 
 	a_shader->disable();
+    
+    if (!cameraLocked) {
+        mesh->renderBounding(model);
+    }
 }
 
 
@@ -54,7 +59,7 @@ std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture,
 	return entities;
 }
 
-std::vector<Vector3> RayPickCheck(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities) {
+Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity) {
 	Vector2 mousePos = Input::mouse_position;
 	Game* g = Game::instance;
 	Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
@@ -66,9 +71,24 @@ std::vector<Vector3> RayPickCheck(Camera* cam, std::vector<Vector3> points, std:
 		Vector3 pos;
 		Vector3 normal;
 		if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
-			points.push_back(pos);
+            //std::cout << "Selected" << std::endl;
+			//points.push_back(pos);
+            selectedEntity = entity;
+            //if (selectedEntity == NULL) printf("selectedEntity NOT WORKING\n");
+            printf("selectedEntity\n");
+            break;
 		}
 	}
-	return points;
+	return selectedEntity;
 }
 
+void RotateSelected(float angleDegrees, Entity* selectedEntity)
+{
+    if (selectedEntity == NULL)
+    {
+        printf("selectedEntity = NULL\n");
+        return;
+    }
+    selectedEntity->model.rotate(angleDegrees * DEG2RAD, Vector3(0, 1, 0));
+    printf("rotating %f degrees\n", angleDegrees);
+}
