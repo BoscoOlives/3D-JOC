@@ -21,6 +21,8 @@ Mesh* mesh_plane = NULL;
 Mesh* mesh_bomb = NULL;
 Mesh* mesh_car = NULL;
 Mesh* mesh_penguin = NULL;
+Mesh* mesh_house = NULL;
+Mesh* mesh_man = NULL;
 
 Texture* texture = NULL;
 Texture* texture_island = NULL;
@@ -28,6 +30,8 @@ Texture* texture_plane = NULL;
 Texture* texture_bomb = NULL;
 Texture* texture_car = NULL;
 Texture* texture_penguin = NULL;
+Texture* texture_black = NULL;
+
 Matrix44 planeModel; // NO HA DE QUEDAR AQUI
 Matrix44 bombModel;
 Matrix44 bombOffset;
@@ -60,16 +64,10 @@ class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES EN
 Prop props[20];
 
 
-//class Entity {
-//public:
-//	Matrix44 model;
-//	Mesh* mesh;
-//	Texture* texture;
-//};
-
 struct Player {
     Vector3 pos;
     float yaw;
+	float pitch;
 };
 Player player;
 
@@ -132,9 +130,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
     
     texture_penguin = Texture::Get("data/color-atlas-new.png");
     mesh_penguin =Mesh::Get("data/penguin_20.obj");
-    
+
+	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
+	mesh_man = Mesh::Get("data/man.obj");
+
+	texture_black = texture_black->getBlackTexture();
 	// example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
 
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
@@ -269,7 +271,7 @@ void Game::render(void)
     Matrix44 skyModel;
     skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
     Entity background = Entity(skyModel, mesh_sky, texture_sky);
-    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST); //desactivem el DEPTH TEST abans de redenritzar el fons perque no es superposi devant entitats
     background.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
     glEnable(GL_DEPTH_TEST);
     
@@ -282,11 +284,23 @@ void Game::render(void)
 	//m2.translate(150, 0, 0);
 	//m2.rotate(angle * DEG2RAD, Vector3(0, 1, 0));
 	//m2.scale(100, 100, 100);
-	
-	if (cameraLocked) {
+	Matrix44 playerModel;
+    playerModel.translate(player.pos.x, player.pos.y, player.pos.z);
+    playerModel.rotate(player.yaw * DEG2RAD, Vector3(0, 1, 0));
+
+	if (cameraLocked) { //en aquet cas hi ha la possibilitat de les dues vistes, pero si ens quedem amb un FirstPerson, sobra la mitad de aqest if
 		Vector3 eye = playerModel * Vector3(0,3,3);
 		Vector3 center = playerModel * Vector3(0,0,-5);
         Vector3 up = Vector3(0,1,0);
+
+		if (firstPerson) {
+			Matrix44 camModel = playerModel;
+			camModel.rotate(player.pitch * DEG2RAD, Vector3(1, 0, 0));
+
+			eye = playerModel * Vector3(0, 1, -0.5);
+			center = eye + camModel.rotateVector(Vector3(0, 0, -1));
+			up = camModel.rotateVector(Vector3(0, 1, 0));
+		}
         
         if (hola%300 == 0) printf("eye: (%f, %f, %f), center: (%f, %f, %f)\n", eye.x, eye.y, eye.z, center.x, center.y, center.z);
         
@@ -304,11 +318,9 @@ void Game::render(void)
     //RenderPlanes();
     
     //CREAR JUGADOR
-    //PlayerModel creat al game.h
-    playerModel.translate(player.pos.x, player.pos.y, player.pos.z);
-    playerModel.rotate(player.yaw * DEG2RAD, Vector3(0, 1, 0));
-    Entity player = Entity(playerModel, mesh_plane, texture_plane);
-    player.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+	Entity player_entity = Entity(playerModel, mesh_man, texture_black);
+
+	player_entity.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
     
     
 	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
@@ -356,12 +368,18 @@ void Game::update(double seconds_elapsed)
 	}
 
 	if (cameraLocked) { //moviment player
-		float playerSpeed = 8.0f * elapsed_time;
-		float rotSpeed = 200.0f * DEG2RAD * elapsed_time;
+		float playerSpeed = 20.0f * elapsed_time;
+		float rotSpeed = 150.0f * elapsed_time;
         
-        if (Input::isKeyPressed(SDL_SCANCODE_E)) player.yaw = player.yaw + rotSpeed;
-        if (Input::isKeyPressed(SDL_SCANCODE_Q)) player.yaw = player.yaw - rotSpeed;
+        if (Input::isKeyPressed(SDL_SCANCODE_D)) player.yaw = player.yaw + rotSpeed;
+        if (Input::isKeyPressed(SDL_SCANCODE_A)) player.yaw = player.yaw - rotSpeed;
         
+		if (firstPerson){
+			player.pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
+			player.yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
+			Input::centerMouse();
+			SDL_ShowCursor(false);
+		}
         Matrix44 playerRotation;
         playerRotation.rotate(player.yaw * DEG2RAD, Vector3(0,1,0));
         
@@ -371,10 +389,39 @@ void Game::update(double seconds_elapsed)
         
         if (Input::isKeyPressed(SDL_SCANCODE_W)) playerVel = playerVel + (playerSpeed * forward);
         if (Input::isKeyPressed(SDL_SCANCODE_S)) playerVel = playerVel - (playerSpeed * forward);
-        if (Input::isKeyPressed(SDL_SCANCODE_A)) playerVel = playerVel + (playerSpeed * right);
-        if (Input::isKeyPressed(SDL_SCANCODE_D)) playerVel = playerVel - (playerSpeed * right);
+        if (Input::isKeyPressed(SDL_SCANCODE_E)) playerVel = playerVel + (playerSpeed * right);
+        if (Input::isKeyPressed(SDL_SCANCODE_Q)) playerVel = playerVel - (playerSpeed * right);
 
-        player.pos = player.pos + playerVel;
+		Vector3 nexPos = player.pos + playerVel;
+		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
+		Vector3 character_center = nexPos + Vector3(0, 1, 0);
+
+		for (size_t i = 0; i < entities.size(); i++)
+		{
+			Entity* currentEntity = entities[i];
+
+			Vector3 coll;
+			Vector3 collnorm;
+			//comprobamos si colisiona el objeto con la esfera (radio 3)
+			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 3, coll, collnorm))
+				continue; //si no colisiona, pasamos al siguiente objeto
+
+			//si la esfera está colisionando muevela a su posicion anterior alejandola del objeto
+			Vector3 push_away = normalize(coll - character_center) * elapsed_time;
+			nexPos = player.pos - push_away; //move to previous pos but a little bit further
+
+			//cuidado con la Y, si nuestro juego es 2D la ponemos a 0
+			nexPos.y = 0;
+
+			//reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
+			//velocity = reflect(velocity, collnorm) * 0.95;
+		}
+
+		
+
+
+        player.pos = nexPos;
+
 	}
 	else {
 		//async input to move the camera around
@@ -415,7 +462,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: entities = AddEntityInFront(camera, mesh_plane, texture_plane, entities); break;
+        case SDLK_2: entities = AddEntityInFront(camera, mesh_house, texture_plane, entities); break;
         case SDLK_3: selectedEntity = RayPick(camera, points, entities, selectedEntity);
             if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
             break;

@@ -7,7 +7,7 @@ Entity* Entity::instance = NULL;
 Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 	instance = this;
 	this->model = model;
-	this->mesh = mesh;
+	this->mesh= mesh;
 	this->texture = texture;
 
 }
