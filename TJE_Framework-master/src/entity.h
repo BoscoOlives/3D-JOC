@@ -8,6 +8,7 @@
 #include "includes.h"
 
 
+
 class Entity {
 public:
 	static Entity* instance;
@@ -20,7 +21,4 @@ public:
 	
 };
 
-std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities);
-Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity);
-void RotateSelected(float angleDegrees, Entity* selectedEntity);
 #endif

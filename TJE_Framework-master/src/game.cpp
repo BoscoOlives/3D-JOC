@@ -9,6 +9,8 @@
 
 
 
+
+
 #include <cmath>
 
 //#define EDITOR
@@ -64,12 +66,12 @@ class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES EN
 Prop props[20];
 
 
-struct Player {
-    Vector3 pos;
-    float yaw;
-	float pitch;
-};
-Player player;
+//struct Player {
+//    Vector3 pos;
+//    float yaw;
+//	float pitch;
+//};
+//Player player;
 
 const bool firstPerson = true;
 
@@ -133,6 +135,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
 	mesh_man = Mesh::Get("data/man.obj");
+
+	
 
 	texture_black = texture_black->getBlackTexture();
 	// example of shader loading using the shaders manager
@@ -285,8 +289,8 @@ void Game::render(void)
 	//m2.rotate(angle * DEG2RAD, Vector3(0, 1, 0));
 	//m2.scale(100, 100, 100);
 	Matrix44 playerModel;
-    playerModel.translate(player.pos.x, player.pos.y, player.pos.z);
-    playerModel.rotate(player.yaw * DEG2RAD, Vector3(0, 1, 0));
+    playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
+    playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 
 	if (cameraLocked) { //en aquet cas hi ha la possibilitat de les dues vistes, pero si ens quedem amb un FirstPerson, sobra la mitad de aqest if
 		Vector3 eye = playerModel * Vector3(0,3,3);
@@ -295,7 +299,7 @@ void Game::render(void)
 
 		if (firstPerson) {
 			Matrix44 camModel = playerModel;
-			camModel.rotate(player.pitch * DEG2RAD, Vector3(1, 0, 0));
+			camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
 			eye = playerModel * Vector3(0, 1, -0.5);
 			center = eye + camModel.rotateVector(Vector3(0, 0, -1));
@@ -371,17 +375,17 @@ void Game::update(double seconds_elapsed)
 		float playerSpeed = 20.0f * elapsed_time;
 		float rotSpeed = 150.0f * elapsed_time;
         
-        if (Input::isKeyPressed(SDL_SCANCODE_D)) player.yaw = player.yaw + rotSpeed;
-        if (Input::isKeyPressed(SDL_SCANCODE_A)) player.yaw = player.yaw - rotSpeed;
+        if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
+        if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
         
 		if (firstPerson){
-			player.pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
-			player.yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
+			player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
+			player->yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
 			Input::centerMouse();
 			SDL_ShowCursor(false);
 		}
         Matrix44 playerRotation;
-        playerRotation.rotate(player.yaw * DEG2RAD, Vector3(0,1,0));
+        playerRotation.rotate(player->yaw * DEG2RAD, Vector3(0,1,0));
         
         Vector3 forward = playerRotation.rotateVector(Vector3(0,0,-1));
         Vector3 right = playerRotation.rotateVector(Vector3(1,0,0));
@@ -392,7 +396,7 @@ void Game::update(double seconds_elapsed)
         if (Input::isKeyPressed(SDL_SCANCODE_E)) playerVel = playerVel + (playerSpeed * right);
         if (Input::isKeyPressed(SDL_SCANCODE_Q)) playerVel = playerVel - (playerSpeed * right);
 
-		Vector3 nexPos = player.pos + playerVel;
+		Vector3 nexPos = player->pos + playerVel;
 		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
 		Vector3 character_center = nexPos + Vector3(0, 1, 0);
 
@@ -408,7 +412,7 @@ void Game::update(double seconds_elapsed)
 
 			//si la esfera está colisionando muevela a su posicion anterior alejandola del objeto
 			Vector3 push_away = normalize(coll - character_center) * elapsed_time;
-			nexPos = player.pos - push_away; //move to previous pos but a little bit further
+			nexPos = player->pos - push_away; //move to previous pos but a little bit further
 
 			//cuidado con la Y, si nuestro juego es 2D la ponemos a 0
 			nexPos.y = 0;
@@ -420,7 +424,7 @@ void Game::update(double seconds_elapsed)
 		
 
 
-        player.pos = nexPos;
+        player->pos = nexPos;
 
 	}
 	else {
@@ -462,12 +466,12 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: entities = AddEntityInFront(camera, mesh_house, texture_plane, entities); break;
-        case SDLK_3: selectedEntity = RayPick(camera, points, entities, selectedEntity);
+        case SDLK_2: entities = world.AddEntityInFront(camera, mesh_house, texture_plane, entities); break;
+        case SDLK_3: selectedEntity = world.RayPick(camera, points, entities, selectedEntity);
             if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
             break;
-        case SDLK_4: RotateSelected(10.0f, selectedEntity); break;
-        case SDLK_5: RotateSelected(-10.0f, selectedEntity); break;
+        case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
+        case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
 	}
 }
 

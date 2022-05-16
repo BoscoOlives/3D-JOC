@@ -10,9 +10,9 @@
 
 Player* Player::instance = NULL;
 
-Player::Player(Vector3 position, float yaw, float pitch) {
+Player::Player() {
     instance = this;
-    this->position = position;
-    this->yaw = yaw;
-    this->pitch = pitch;
+    //this->pos = position;
+    //this->yaw = yaw;
+    //this->pitch = pitch;
 }

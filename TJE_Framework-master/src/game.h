@@ -9,6 +9,9 @@
 #include "camera.h"
 #include "utils.h"
 #include "entity.h"
+#include "world.h"
+#include "player.h"
+
 class Game
 {
 public:
@@ -34,6 +37,8 @@ public:
 	std::vector<Entity*> entities;
 	std::vector<Vector3> points;
     Entity* selectedEntity = NULL;
+	World world;
+	Player* player = &world.player;
     
 
 	Game( int window_width, int window_height, SDL_Window* window );
