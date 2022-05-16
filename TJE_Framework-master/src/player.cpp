@@ -12,7 +12,4 @@ Player* Player::instance = NULL;
 
 Player::Player() {
     instance = this;
-    //this->pos = position;
-    //this->yaw = yaw;
-    //this->pitch = pitch;
 }

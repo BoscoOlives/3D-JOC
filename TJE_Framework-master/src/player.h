@@ -19,7 +19,6 @@ public:
     float yaw;
     float pitch;
 
-    /*Player(Vector3 position = { 0, 0, 0 }, float yaw = 0.0f, float pitch = 0.0f);*/
     Player();
 };
 

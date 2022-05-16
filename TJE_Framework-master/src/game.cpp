@@ -73,7 +73,7 @@ Prop props[20];
 //};
 //Player player;
 
-const bool firstPerson = true;
+bool firstPerson = true;
 
 Mesh* mesh_ground;
 Texture* texture_ground;
@@ -251,7 +251,6 @@ void RenderIslands() {
 }
 
 //what to do when the image has to be draw
-int hola = 0;
 void Game::render(void)
 {
 	//set the clear color (the background color)
@@ -305,9 +304,7 @@ void Game::render(void)
 			center = eye + camModel.rotateVector(Vector3(0, 0, -1));
 			up = camModel.rotateVector(Vector3(0, 1, 0));
 		}
-        
-        if (hola%300 == 0) printf("eye: (%f, %f, %f), center: (%f, %f, %f)\n", eye.x, eye.y, eye.z, center.x, center.y, center.z);
-        
+              
 		camera->lookAt(eye, center, up);
 	}
 	
@@ -348,8 +345,6 @@ void Game::render(void)
 
 	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
-    
-    hola++;
 }
 
 void Game::update(double seconds_elapsed)
@@ -370,19 +365,20 @@ void Game::update(double seconds_elapsed)
 		
 		cameraLocked = !cameraLocked;
 	}
-
+	SDL_ShowCursor(!cameraLocked);
 	if (cameraLocked) { //moviment player
 		float playerSpeed = 20.0f * elapsed_time;
 		float rotSpeed = 150.0f * elapsed_time;
         
         if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
         if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
-        
+		
+		//Input::centerMouse();
+		
 		if (firstPerson){
 			player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
 			player->yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
 			Input::centerMouse();
-			SDL_ShowCursor(false);
 		}
         Matrix44 playerRotation;
         playerRotation.rotate(player->yaw * DEG2RAD, Vector3(0,1,0));
