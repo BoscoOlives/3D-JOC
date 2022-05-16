@@ -11,16 +11,54 @@
 
 World* World::instance = NULL;
 
+class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES ENTITATS I UN IDENTIFICADOR (video Programando un Mundo 1:50:00)
+    int id;
+    Mesh* mesh;
+    Texture* texture;
+};
+Prop props[20];
+/*Funció que guarda el món:
+ID Entity int
+POSITION Vector3
+ROTATION Vector3
+SCALE Vector3
+
+
+escupir Model
+path Mesh
+path Texture
+
+*/
+
 World::World() {
     instance = this;
     //this->player = Player();
 }
 
-void World::saveWorld() {
+void World::saveWorld(std::vector<Entity*> entities) {
     //save player, enemies (positions, rotations...)
+    printf("Saving World...");
+    FILE* file = fopen("world.txt", "wb");
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        Entity* entity = entities[i];
+        Matrix44 model = entity->model;
+
+        std::string str = {
+            std::to_string(i)+" "+
+            std::to_string(model._11)+" "+std::to_string(model._12)+" "+std::to_string(model._13)+" "+std::to_string(model._14)+" "+
+            std::to_string(model._21)+" "+ std::to_string(model._22)+" "+ std::to_string(model._23)+" "+std::to_string(model._24)+" "+
+            std::to_string(model._31)+" "+ std::to_string(model._32)+" "+ std::to_string(model._33)+" "+ std::to_string(model._34) + "\n"};
+        const char* buffer = str.c_str();
+
+        fwrite(buffer, strlen(buffer)/4 + 1, sizeof(buffer), file);
+    }
+    fclose(file);
 }
 void World::loadWorld() {
     //load player, enemies (positions, rotations...)
+    FILE* file = fopen("world.txt", "rb");
+
 }
 
 std::vector<Entity*> World::AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities) {

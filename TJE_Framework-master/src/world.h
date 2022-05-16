@@ -28,7 +28,7 @@ public:
     
     World();
     
-    void saveWorld();
+    void saveWorld(std::vector<Entity*> entities);
     void loadWorld();
     
     std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities);

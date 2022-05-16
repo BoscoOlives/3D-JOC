@@ -43,22 +43,6 @@ float padding = 20.0f;
 float lod_distance = 200.0f;
 float no_render_distance = 1000.0f;
 
-
-class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES ENTITATS I UN IDENTIFICADOR
-	int id;
-	Mesh* mesh;
-	Texture* texture;
-};
-Prop props[20];
-
-
-//struct Player {
-//    Vector3 pos;
-//    float yaw;
-//	float pitch;
-//};
-//Player player;
-
 bool firstPerson = true;
 
 Mesh* mesh_ground;
@@ -92,23 +76,16 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
     mesh_ground = new Mesh();
     mesh_ground->createPlane(1000);
     texture_ground = Texture::Get("data/ground.tga");
-
-	//load one texture without using the Texture Manager (Texture::Get would use the manager)
-	//texture = new Texture();
- 	//texture->load("data/texture.tga");
-
-	// example of loading Mesh from Mesh Manager
-	//mesh = Mesh::Get("data/box.ASE");
-	//mesh2 = Mesh::Get("data/sphere.obj");
 	
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
 	mesh_man = Mesh::Get("data/man.obj");
 
-	
-
 	texture_black = texture_black->getBlackTexture();
+
+	
+	
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
 
@@ -174,15 +151,6 @@ void Game::render(void)
 		camera->lookAt(eye, center, up);
 	}
 	
-	//RENDER ISLANDS
-	//RenderIslands();
-	/*Matrix44 islandModel;
-	RenderMesh(islandModel, mesh_island, texture_island, shader, camera);
-	mesh_island->renderBounding(islandModel);*/
-	//Render PLANE		
-	//RenderMesh(planeModel, mesh_plane, texture_plane, shader, camera);
-    //RenderMesh(bombModel, mesh_bomb, texture_bomb, shader, camera);
-    //RenderPlanes();
     
     //CREAR JUGADOR
 	Entity player_entity = Entity(playerModel, mesh_man, texture_black);
@@ -324,6 +292,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
             break;
         case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
         case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
+		case SDLK_0: world.saveWorld(entities); break;
 	}
 }
 
