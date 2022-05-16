@@ -17,26 +17,12 @@
 
 //some globals
 Mesh* mesh = NULL;
-Mesh* mesh2 = NULL;
-Mesh* mesh_island = NULL;
-Mesh* mesh_plane = NULL;
-Mesh* mesh_bomb = NULL;
-Mesh* mesh_car = NULL;
-Mesh* mesh_penguin = NULL;
 Mesh* mesh_house = NULL;
 Mesh* mesh_man = NULL;
 
 Texture* texture = NULL;
-Texture* texture_island = NULL;
-Texture* texture_plane = NULL;
-Texture* texture_bomb = NULL;
-Texture* texture_car = NULL;
-Texture* texture_penguin = NULL;
 Texture* texture_black = NULL;
 
-Matrix44 planeModel; // NO HA DE QUEDAR AQUI
-Matrix44 bombModel;
-Matrix44 bombOffset;
 bool cameraLocked = false;
 bool bombAttached = true;
 
@@ -95,8 +81,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//OpenGL flags
 	glEnable( GL_CULL_FACE ); //render both sides of every triangle
 	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
-
-    bombOffset.setTranslation(0.0f, -2.0f, 0.0f);
     
 	//create our camera
 	camera = new Camera();
@@ -118,20 +102,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//mesh2 = Mesh::Get("data/sphere.obj");
 	
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
-	texture_island =Texture::Get("data/island/island_color.tga");
-	mesh_island = Mesh::Get("data/island/island.ASE");
-
-	texture_plane = Texture::Get("data/spitfire/spitfire_color_spec.tga");
-	mesh_plane = Mesh::Get("data/spitfire/spitfire.ASE");
-
-    texture_bomb = Texture::Get("data/torpedo_bullet/torpedo.tga");
-    mesh_bomb = Mesh::Get("data/torpedo_bullet/torpedo.ASE");
-
-	texture_car = Texture::Get("data/cart.png");
-	mesh_car = Mesh::Get("data/cart.obj");
-    
-    texture_penguin = Texture::Get("data/color-atlas-new.png");
-    mesh_penguin =Mesh::Get("data/penguin_20.obj");
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
 	mesh_man = Mesh::Get("data/man.obj");
@@ -144,110 +114,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
-}
-
-
-void RenderPlanes()
-{
-    //enable shader
-    shader->enable();
-    Camera* cam = Game::instance->camera;
-    float time = Game::instance->time;
-    //upload uniforms
-    shader->setUniform("u_color", Vector4(1, 1, 1, 1));
-    shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
-    shader->setUniform("u_texture", texture_plane, 0);
-    shader->setUniform("u_time", time);
-
-    Matrix44 m;
-    for (size_t i = 0; i < planes_width; i++)
-    {
-        for (size_t j = 0; j < planes_height; j++)
-        {
-            Matrix44 model;
-            model.translate(i * padding, 0.0f, j * padding);
-            
-            Vector3 planePos = model.getTranslation();
-            
-            if(!cam->testPointInFrustum(planePos)) {
-                continue;
-            }
-            
-            Vector3 camPos = cam->eye;
-            
-            float dist = planePos.distance(camPos);
-            
-            if(dist > no_render_distance) {
-                continue;
-            }
-            
-            Mesh* mesh = Mesh::Get("data/spitfire/spitfire_low.ASE");
-            if(dist < lod_distance) {
-                mesh = Mesh::Get("data/spitfire/spitfire_low.ASE");
-            }
-            
-            BoundingBox worldAABB = transformBoundingBox(model, mesh->box);
-            if (!cam->testBoxInFrustum(worldAABB.center, worldAABB.halfsize)) {
-                continue;
-            }
-            
-            shader->setUniform("u_model", model);
-            mesh->render(GL_TRIANGLES);
-        }
-    }
-
-    //disable shader
-    shader->disable();
-}
-
-//void RenderMesh(Matrix44& model, Mesh* a_mesh, Texture* tex, Shader* a_shader, Camera* cam) {
-//	assert((a_mesh != NULL, "mesh in renderMesh was null"));
-//	if (!a_shader) return;
-//
-//	float time = Game::instance->time;
-//	//enable shader
-//	a_shader->enable();
-//
-//	//upload uniforms
-//	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
-//	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
-//	a_shader->setUniform("u_texture", tex, 0);
-//	a_shader->setUniform("u_time", time);
-//	a_shader->setUniform("u_model", model);
-//	a_mesh->render(GL_TRIANGLES);
-//
-//	a_shader->disable();
-//}
-
-void RenderIslands() {
-
-	if (shader)
-	{
-		//enable shader
-		shader->enable();
-		Camera* cam = Game::instance->camera;
-		float time = Game::instance->time;
-		//upload uniforms
-		shader->setUniform("u_color", Vector4(1, 1, 1, 1));
-		shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
-		shader->setUniform("u_texture", texture_island, 0);
-		shader->setUniform("u_time", time);
-
-		Matrix44 m;
-		for (size_t i = 0; i < 10; i++)
-		{
-			for (size_t j = 0; j < 10; j++)
-			{	
-				Vector3 size = mesh_island->box.halfsize * 2;
-				m.setTranslation(size.x * i, 0.0f, size.z * j);
-				shader->setUniform("u_model", m);
-				mesh_island->render(GL_TRIANGLES);
-			}
-		}
-
-		//disable shader
-		shader->disable();
-	}
 }
 
 //what to do when the image has to be draw
@@ -440,16 +306,6 @@ void Game::update(double seconds_elapsed)
         bombAttached = false;
     }
     
-    if (bombAttached)
-    {
-        bombModel = bombOffset * planeModel;
-    }
-    else
-    {
-        bombModel.translateGlobal(0.0f, -9.8f * elapsed_time, 0.0f);
-    }
-    
-    
 	//to navigate with the mouse fixed in the middle
 	if (mouse_locked)
 		Input::centerMouse();
@@ -462,7 +318,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: entities = world.AddEntityInFront(camera, mesh_house, texture_plane, entities); break;
+        case SDLK_2: entities = world.AddEntityInFront(camera, mesh_house, texture_black, entities); break;
         case SDLK_3: selectedEntity = world.RayPick(camera, points, entities, selectedEntity);
             if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
             break;
