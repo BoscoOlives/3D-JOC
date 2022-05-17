@@ -37,27 +37,62 @@ World::World() {
 
 void World::saveWorld(std::vector<Entity*> entities) {
     //save player, enemies (positions, rotations...)
-    printf("Saving World...");
+    printf("Saving World...\n");
     FILE* file = fopen("world.txt", "wb");
     for (size_t i = 0; i < entities.size(); i++)
     {
         Entity* entity = entities[i];
         Matrix44 model = entity->model;
 
+        //for (size_t j = 0; j < 15; j++)
+        //{
+        //    std::string str = { std::to_string(model.m[j]) + "\n" };
+        //    const char* buffer = str.c_str();
+        //    fwrite(buffer, strlen(buffer) / 4 + 1, sizeof(buffer), file);
+        //}
         std::string str = {
-            std::to_string(i)+" "+
-            std::to_string(model._11)+" "+std::to_string(model._12)+" "+std::to_string(model._13)+" "+std::to_string(model._14)+" "+
-            std::to_string(model._21)+" "+ std::to_string(model._22)+" "+ std::to_string(model._23)+" "+std::to_string(model._24)+" "+
-            std::to_string(model._31)+" "+ std::to_string(model._32)+" "+ std::to_string(model._33)+" "+ std::to_string(model._34) + "\n"};
-        const char* buffer = str.c_str();
+            std::to_string(model._11)+"\n"+std::to_string(model._12)+"\n"+std::to_string(model._13)+"\n"+std::to_string(model._14)+"\n"+
+            std::to_string(model._21)+"\n"+ std::to_string(model._22)+"\n"+ std::to_string(model._23)+"\n"+std::to_string(model._24)+"\n"+
+            std::to_string(model._31)+"\n"+ std::to_string(model._32)+"\n"+ std::to_string(model._33)+"\n"+ std::to_string(model._34)+"\n"+
+            std::to_string(model._41) + "\n" + std::to_string(model._42) + "\n" + std::to_string(model._43) + "\n" + std::to_string(model._44) + "\n" };
 
-        fwrite(buffer, strlen(buffer)/4 + 1, sizeof(buffer), file);
+        const char* buffer = str.c_str();
+        fwrite(buffer, int(strlen(buffer) / 4), sizeof(buffer), file);
     }
     fclose(file);
 }
 void World::loadWorld() {
     //load player, enemies (positions, rotations...)
-    FILE* file = fopen("world.txt", "rb");
+    
+    FILE* file;
+    long lSize;
+    char* buffer;
+    size_t result;
+    file = fopen("world.txt", "rb");
+
+    if (file == NULL) { printf("No exist world file!\n");}
+    
+    else {
+        
+        // obtain file size:
+        fseek(file, 0, SEEK_END);
+        lSize = ftell(file);
+        rewind(file);
+
+        // allocate memory to contain the whole file:
+        buffer = (char*)malloc(sizeof(char) * lSize); //aixo guarda tots els valors del fitxer seguits, nose com accedir LINE per LINE
+
+        // copy the file into the buffer:
+        result = fread(buffer, 1, lSize, file);
+
+        std::cout << buffer << std::endl;
+
+        // terminate
+
+        fclose(file);
+        free(buffer);
+        printf("Loading World...\n");
+    }
 
 }
 
@@ -108,4 +143,27 @@ void World::RotateSelected(float angleDegrees, Entity* selectedEntity)
     }
     selectedEntity->model.rotate(angleDegrees * DEG2RAD, Vector3(0, 1, 0));
     printf("rotating %f degrees\n", angleDegrees);
+}
+
+std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity) {
+    
+    Vector2 mousePos = Input::mouse_position;
+    Game* g = Game::instance;
+    Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
+    Vector3 rayOrigin = cam->eye;
+
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        Entity* entity = entities[i];
+        Vector3 pos;
+        Vector3 normal;
+        if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
+            entities.erase(entities.begin() + i);
+            printf("Entity Removed\n");
+            return entities;
+        }
+    }
+    printf("No Entity Removed\n");
+    return entities;
+     
 }

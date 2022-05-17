@@ -83,8 +83,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	mesh_man = Mesh::Get("data/man.obj");
 
 	texture_black = texture_black->getBlackTexture();
-
-	
 	
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
@@ -170,6 +168,11 @@ void Game::render(void)
 	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera, cameraLocked);
 	glPointSize(1.0f);
 
+
+	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
+		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity";
+		drawText(this->window_width-200, 2, text_edicio, Vector3(1, 1, 1), 2);
+	}
 
 	//Draw the floor grid
 	drawGrid();
@@ -292,7 +295,9 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
             break;
         case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
         case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
+		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities, selectedEntity); break;
 		case SDLK_0: world.saveWorld(entities); break;
+		case SDLK_9: world.loadWorld(); break;
 	}
 }
 
@@ -336,4 +341,3 @@ void Game::onResize(int width, int height)
 	window_width = width;
 	window_height = height;
 }
-
