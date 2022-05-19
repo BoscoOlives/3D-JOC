@@ -39,6 +39,8 @@ public:
     Entity* selectedEntity = NULL;
 	World world;
 	Player* player = &world.player;
+	Texture* texture_black = NULL;
+	
     
 
 	Game( int window_width, int window_height, SDL_Window* window );

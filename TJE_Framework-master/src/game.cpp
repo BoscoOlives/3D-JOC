@@ -21,7 +21,7 @@ Mesh* mesh_house = NULL;
 Mesh* mesh_man = NULL;
 
 Texture* texture = NULL;
-Texture* texture_black = NULL;
+
 
 bool cameraLocked = false;
 bool bombAttached = true;
@@ -174,6 +174,11 @@ void Game::render(void)
 		drawText(this->window_width-200, 2, text_edicio, Vector3(1, 1, 1), 2);
 	}
 
+	if (player->shooting) {
+		player->Shot(GL_TRIANGLES, camera, shader, cameraLocked);
+	}
+
+
 	//Draw the floor grid
 	drawGrid();
 
@@ -191,11 +196,13 @@ void Game::update(double seconds_elapsed)
 	//example
 	angle += (float)seconds_elapsed * 10.0f;
 
-	//mouse input to rotate the cam
-	if ((Input::mouse_state & SDL_BUTTON_LEFT) || mouse_locked ) //is left button pressed?
-	{
-		camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
-		camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
+	//mouse input to rotate the cam 
+	if (!cameraLocked) {
+		if ((Input::mouse_state & SDL_BUTTON_LEFT) || mouse_locked ) //is left button pressed? NO ENTENC PER OR DE MOUSE_LOCKED
+		{
+			camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
+			camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
+		}
 	}
 
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
@@ -258,6 +265,11 @@ void Game::update(double seconds_elapsed)
 
 
         player->pos = nexPos;
+
+		//Render de una bala / bullet
+		if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
+			player->shooting = true;
+		}
 
 	}
 	else {

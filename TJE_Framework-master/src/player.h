@@ -11,6 +11,9 @@
 
 #include "utils.h"
 #include "includes.h"
+#include "camera.h"
+#include "entity.h"
+
 
 class Player {
 public:
@@ -18,10 +21,13 @@ public:
     Vector3 pos;
     float yaw;
     float pitch;
+    bool shooting;
 
     Player();
+    void Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked);
+
 };
 
 
-#endif /* player_h */
 
+#endif /* player_h */
