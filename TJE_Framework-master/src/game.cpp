@@ -43,7 +43,6 @@ float padding = 20.0f;
 float lod_distance = 200.0f;
 float no_render_distance = 1000.0f;
 
-bool firstPerson = true;
 
 Mesh* mesh_ground;
 Texture* texture_ground;
@@ -130,21 +129,21 @@ void Game::render(void)
 	//m2.scale(100, 100, 100);
 	Matrix44 playerModel;
     playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
-    playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
+	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
+	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
+	
+
 
 	if (cameraLocked) { //en aquet cas hi ha la possibilitat de les dues vistes, pero si ens quedem amb un FirstPerson, sobra la mitad de aqest if
-		Vector3 eye = playerModel * Vector3(0,3,3);
-		Vector3 center = playerModel * Vector3(0,0,-5);
-        Vector3 up = Vector3(0,1,0);
 
-		if (firstPerson) {
-			Matrix44 camModel = playerModel;
-			camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
+		Matrix44 camModel = playerModel;
+		//camModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));// Girem la camera perque sinos apunta cap al darrera
+		camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
-			eye = playerModel * Vector3(0, 1, -0.5);
-			center = eye + camModel.rotateVector(Vector3(0, 0, -1));
-			up = camModel.rotateVector(Vector3(0, 1, 0));
-		}
+		Vector3 eye = playerModel * Vector3(0, 1, -0.5);
+		Vector3 center = eye + camModel.rotateVector(Vector3(0, 0, -1));
+		Vector3 up = camModel.rotateVector(Vector3(0, 1, 0));
+		
               
 		camera->lookAt(eye, center, up);
 	}
@@ -174,9 +173,6 @@ void Game::render(void)
 		drawText(this->window_width-200, 2, text_edicio, Vector3(1, 1, 1), 2);
 	}
 
-	if (player->shooting) {
-		player->Shot(GL_TRIANGLES, camera, shader, cameraLocked);
-	}
 
 
 	//Draw the floor grid
@@ -201,7 +197,7 @@ void Game::update(double seconds_elapsed)
 		if ((Input::mouse_state & SDL_BUTTON_LEFT) || mouse_locked ) //is left button pressed? NO ENTENC PER OR DE MOUSE_LOCKED
 		{
 			camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
-			camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
+			camera->rotate(Input::mouse_delta.y * 0.005f, Vector3(-1.0f,0.0f,0.0f));
 		}
 	}
 
@@ -217,13 +213,10 @@ void Game::update(double seconds_elapsed)
         if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
         if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
 		
-		//Input::centerMouse();
+		Input::centerMouse();
+		player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
+		player->yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
 		
-		if (firstPerson){
-			player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
-			player->yaw += -Input::mouse_delta.x * 10.0f * elapsed_time;
-			Input::centerMouse();
-		}
         Matrix44 playerRotation;
         playerRotation.rotate(player->yaw * DEG2RAD, Vector3(0,1,0));
         
@@ -268,7 +261,8 @@ void Game::update(double seconds_elapsed)
 
 		//Render de una bala / bullet
 		if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
-			player->shooting = true;
+			entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
+
 		}
 
 	}
@@ -284,10 +278,17 @@ void Game::update(double seconds_elapsed)
 
 	}
     
-    if (Input::wasKeyPressed(SDL_SCANCODE_F))
-    {
-        bombAttached = false;
-    }
+	for (size_t i = 0; i < entities.size(); i++)
+	{
+		Entity* bullet = entities[i];
+		if (bullet->current_entity == Entity::ENTITY_ID::BULLET) {
+			//Matrix44 model_bullet;
+			Vector3 pos;
+			pos = bullet->model.getTranslation();
+			pos = pos - Vector3(0, 0, 100.0f * elapsed_time);
+			bullet->model.translate(pos.x, pos.y, pos.z);
+		}
+	}
     
 	//to navigate with the mouse fixed in the middle
 	if (mouse_locked)

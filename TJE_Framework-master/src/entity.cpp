@@ -9,6 +9,7 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 	this->model = model;
 	this->mesh= mesh;
 	this->texture = texture;
+	
 
 }
 
@@ -38,4 +39,9 @@ void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cam
     if (!cameraLocked) {
         mesh->renderBounding(model);
     }
+
+}
+
+Bullet::Bullet(Matrix44 model, Mesh* mesh, Texture* texture, Vector3 pos) : Entity(model, mesh, texture) {
+	this->pos = pos;
 }

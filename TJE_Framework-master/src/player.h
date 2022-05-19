@@ -24,7 +24,7 @@ public:
     bool shooting;
 
     Player();
-    void Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked);
+    std::vector<Entity*> Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities);
 
 };
 
