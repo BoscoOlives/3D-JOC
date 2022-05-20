@@ -15,6 +15,7 @@ public:
 	Matrix44 model;
 	Mesh* mesh;
 	Texture* texture;
+	Vector3 dir;
 
 	enum ENTITY_ID {
 		HOUSE = 0,

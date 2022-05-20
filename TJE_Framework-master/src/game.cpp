@@ -82,6 +82,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	mesh_man = Mesh::Get("data/man.obj");
 
 	texture_black = texture_black->getBlackTexture();
+	texture_white = texture_black->getWhiteTexture();
 	
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
@@ -120,6 +121,8 @@ void Game::render(void)
     
     Entity ground = Entity(Matrix44(), mesh_ground, texture_ground);
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+	
+	
 	//Matrix44 m;
 	//m.rotate(angle*DEG2RAD, Vector3(0, 1, 0));
 
@@ -129,7 +132,7 @@ void Game::render(void)
 	//m2.scale(100, 100, 100);
 	Matrix44 playerModel;
     playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
-	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
+	playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
 	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 	
 
@@ -137,7 +140,7 @@ void Game::render(void)
 	if (cameraLocked) { //en aquet cas hi ha la possibilitat de les dues vistes, pero si ens quedem amb un FirstPerson, sobra la mitad de aqest if
 
 		Matrix44 camModel = playerModel;
-		//camModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));// Girem la camera perque sinos apunta cap al darrera
+		camModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));// Girem la camera perque sinos apunta cap al darrera
 		camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
 		Vector3 eye = playerModel * Vector3(0, 1, -0.5);
@@ -186,7 +189,7 @@ void Game::render(void)
 }
 
 void Game::update(double seconds_elapsed)
-{
+{	
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
 	//example
@@ -210,8 +213,8 @@ void Game::update(double seconds_elapsed)
 		float playerSpeed = 20.0f * elapsed_time;
 		float rotSpeed = 150.0f * elapsed_time;
         
-        if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
-        if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
+        //if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
+        //if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
 		
 		Input::centerMouse();
 		player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
@@ -226,8 +229,8 @@ void Game::update(double seconds_elapsed)
         
         if (Input::isKeyPressed(SDL_SCANCODE_W)) playerVel = playerVel + (playerSpeed * forward);
         if (Input::isKeyPressed(SDL_SCANCODE_S)) playerVel = playerVel - (playerSpeed * forward);
-        if (Input::isKeyPressed(SDL_SCANCODE_E)) playerVel = playerVel + (playerSpeed * right);
-        if (Input::isKeyPressed(SDL_SCANCODE_Q)) playerVel = playerVel - (playerSpeed * right);
+        if (Input::isKeyPressed(SDL_SCANCODE_D)) playerVel = playerVel + (playerSpeed * right);
+        if (Input::isKeyPressed(SDL_SCANCODE_A)) playerVel = playerVel - (playerSpeed * right);
 
 		Vector3 nexPos = player->pos + playerVel;
 		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
@@ -254,15 +257,14 @@ void Game::update(double seconds_elapsed)
 			//velocity = reflect(velocity, collnorm) * 0.95;
 		}
 
-		
-
 
         player->pos = nexPos;
 
-		//Render de una bala / bullet
+		//Generem una bala / bullet
+		
 		if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
 			entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
-
+			
 		}
 
 	}
@@ -281,12 +283,14 @@ void Game::update(double seconds_elapsed)
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		Entity* bullet = entities[i];
-		if (bullet->current_entity == Entity::ENTITY_ID::BULLET) {
+		if (bullet->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
 			//Matrix44 model_bullet;
 			Vector3 pos;
 			pos = bullet->model.getTranslation();
-			pos = pos - Vector3(0, 0, 100.0f * elapsed_time);
-			bullet->model.translate(pos.x, pos.y, pos.z);
+
+			pos = pos + bullet->dir * 100.0f * elapsed_time;
+
+			bullet->model.setTranslation(pos.x, pos.y, pos.z);
 		}
 	}
     

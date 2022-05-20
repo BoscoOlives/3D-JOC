@@ -21,6 +21,8 @@ Player* Player::instance = NULL;
 Player::Player() {
     instance = this;
     shooting = false;
+    this->pitch = 0.0f;
+    this->yaw = 0.0f;
 }
 
 std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
@@ -31,15 +33,16 @@ std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, 
 
     Mesh* mesh_bullet = Mesh::Get("data/sphere.obj");
     Matrix44 model;
-    model.scale(0.02, 0.02, 0.02);
+    model.scale(0.01, 0.01, 0.01);
     Texture* texture_bullet = g->texture_black; //la textura de la bala es tota negra
     
-    Vector3 position = pos + Vector3(0, 20, -5); //inicialitzem la posicio de la bala devant del PLAYER
-    model.translate(position.x, position.y, position.z);
+    Vector3 position; //inicialitzem la posicio de la bala devant del PLAYER
+    position = rayOrigin + Vector3(0.0f, 1.0f, -1.0f);
+    model.setTranslation(position.x, position.y, position.z);
 
-    //Bullet* entity_bullet = new Bullet(model, mesh_bullet, texture_bullet, position);
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
     entity_bullet->current_entity = Entity::ENTITY_ID::BULLET;
+    entity_bullet->dir = dir;
 
     entities.push_back(entity_bullet);
     return entities;
