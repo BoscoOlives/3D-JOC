@@ -35,6 +35,7 @@ public:
 	Bullet(Matrix44 model, Mesh* mesh, Texture* texture, Vector3 pos);
 	Vector3 pos;
 	int vel;
+    void update_position(float elapsed_time);
 };
 
 #endif

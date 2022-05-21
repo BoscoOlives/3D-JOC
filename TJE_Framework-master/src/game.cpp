@@ -163,12 +163,12 @@ void Game::render(void)
 		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
-	Mesh m;
-	m.vertices = points;
-	Entity* point = new Entity(Matrix44(), &m, NULL);
-	glPointSize(4.0f);
-	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera, cameraLocked);
-	glPointSize(1.0f);
+//	Mesh m;
+//	m.vertices = points;
+//	Entity* point = new Entity(Matrix44(), &m, NULL);
+//	glPointSize(4.0f);
+//	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera, cameraLocked);
+//	glPointSize(1.0f);
 
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
@@ -189,7 +189,11 @@ void Game::render(void)
 }
 
 void Game::update(double seconds_elapsed)
-{	
+{
+    if (slowMotion) {
+        elapsed_time *= 0.1f;
+    }
+    
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
 	//example
@@ -208,6 +212,13 @@ void Game::update(double seconds_elapsed)
 		
 		cameraLocked = !cameraLocked;
 	}
+    
+    if (Input::wasKeyPressed(SDL_SCANCODE_P)) {
+        slowMotion = !slowMotion;
+        if (slowMotion) printf("slow motion\n");
+        else printf("normal speed\n");
+    }
+    
 	SDL_ShowCursor(!cameraLocked);
 	if (cameraLocked) { //moviment player
 		float playerSpeed = 20.0f * elapsed_time;
@@ -282,15 +293,11 @@ void Game::update(double seconds_elapsed)
     
 	for (size_t i = 0; i < entities.size(); i++)
 	{
-		Entity* bullet = entities[i];
-		if (bullet->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
+		Entity* entity = entities[i];
+		if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
 			//Matrix44 model_bullet;
-			Vector3 pos;
-			pos = bullet->model.getTranslation();
-
-			pos = pos + bullet->dir * 100.0f * elapsed_time;
-
-			bullet->model.setTranslation(pos.x, pos.y, pos.z);
+            Bullet* bullet = (Bullet*)(entity);
+            bullet->update_position(elapsed_time);
 		}
 	}
     

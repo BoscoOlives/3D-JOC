@@ -41,6 +41,7 @@ public:
 	Player* player = &world.player;
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
+    bool slowMotion = false;
 	
 	
     
