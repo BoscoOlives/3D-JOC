@@ -29,7 +29,7 @@ public:
     World();
     
     void saveWorld(std::vector<Entity*> entities);
-    void loadWorld();
+    std::vector<Entity*> loadWorld(std::vector<Entity*> entities);
     
     std::vector<Entity*> AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities);
     Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity);

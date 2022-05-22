@@ -8,6 +8,8 @@
 
 #include "world.h"
 #include "Game.h"
+#include <iostream>
+#include <fstream>
 
 World* World::instance = NULL;
 
@@ -61,38 +63,40 @@ void World::saveWorld(std::vector<Entity*> entities) {
     }
     fclose(file);
 }
-void World::loadWorld() {
+std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
     //load player, enemies (positions, rotations...)
-    
-    FILE* file;
-    long lSize;
-    char* buffer;
-    size_t result;
-    file = fopen("world.txt", "rb");
+    Mesh* mesh = NULL;
+    mesh = Mesh::Get("data/bar-tropic_0.obj"); //canviar (ha d'estar al .txt)
+    Texture* texture = NULL;
+    texture = Game::instance->texture_black; //canviar (ha d'estar al .txt)
 
-    if (file == NULL) { printf("No exist world file!\n");}
-    
-    else {
-        
-        // obtain file size:
-        fseek(file, 0, SEEK_END);
-        lSize = ftell(file);
-        rewind(file);
+    std::string line;
+    std::ifstream myfile("world.txt");
+   // std::cout << myfile.rdbuf();
 
-        // allocate memory to contain the whole file:
-        buffer = (char*)malloc(sizeof(char) * lSize); //aixo guarda tots els valors del fitxer seguits, nose com accedir LINE per LINE
-
-        // copy the file into the buffer:
-        result = fread(buffer, 1, lSize, file);
-
-        std::cout << buffer << std::endl;
-
-        // terminate
-
-        fclose(file);
-        free(buffer);
-        printf("Loading World...\n");
+    Matrix44 model;
+    if (myfile.is_open())
+    {
+        int i = 0;
+        while (getline(myfile, line))
+        {
+            if (i < 16) { //16 valors de la MODEL matrix44
+                model.m[i] = std::stof(line); //cast de string a float
+            }
+            if (i == 15) { //quan es porten 16 valors de una matriu, es dona per suposat que es troba una nova MODEL
+                Entity* entity = new Entity(model, mesh, texture);
+                entities.push_back(entity);
+                i = 0;
+            }
+            std::cout << line << "\n";
+            i = i+1;
+        }
+        myfile.close();
     }
+    else std::cout << "Unable to open file";
+    return entities;
+
+    printf("\nLoading World...\n");
 
 }
 

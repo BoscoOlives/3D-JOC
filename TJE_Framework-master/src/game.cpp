@@ -321,7 +321,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
         case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
 		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities, selectedEntity); break;
 		case SDLK_0: world.saveWorld(entities); break;
-		case SDLK_9: world.loadWorld(); break;
+		case SDLK_9: entities = world.loadWorld(entities); break;
 	}
 }
 
