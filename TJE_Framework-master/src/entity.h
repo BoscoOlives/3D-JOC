@@ -19,8 +19,9 @@ public:
 
 	enum ENTITY_ID {
 		HOUSE = 0,
-		CUBE = 1,
-		BULLET = 2,
+		WALL = 1,
+		ENEMY = 2,
+		BULLET = 3
 	};
 
 	ENTITY_ID current_entity;
@@ -28,15 +29,9 @@ public:
 
 	Entity(Matrix44 model, Mesh* mesh, Texture* texture);
 	void RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cameraLocked, float tiling = 1.0f);
+	void update_position_moving(float elapsed_time, float vel);
 	
 };
 
-class Bullet : public Entity {
-public:
-	Bullet(Matrix44 model, Mesh* mesh, Texture* texture, Vector3 pos);
-	Vector3 pos;
-	int vel;
-    void update_position(float elapsed_time);
-};
 
 #endif

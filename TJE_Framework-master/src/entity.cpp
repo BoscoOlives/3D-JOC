@@ -42,15 +42,12 @@ void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cam
 
 }
 
-Bullet::Bullet(Matrix44 model, Mesh* mesh, Texture* texture, Vector3 pos) : Entity(model, mesh, texture) {
-	this->pos = pos;
-}
-
-void Bullet::update_position(float elapsed_time) {
+void Entity::update_position_moving(float elapsed_time, float vel) {
     Vector3 pos;
     pos = this->model.getTranslation();
-
+	
     pos = pos + this->dir * 100.0f * elapsed_time;
 
     this->model.setTranslation(pos.x, pos.y, pos.z);
+	this->model.scale(0.05, 0.05, 0.05);
 }

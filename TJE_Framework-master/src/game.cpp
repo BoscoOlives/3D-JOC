@@ -18,7 +18,7 @@
 //some globals
 Mesh* mesh = NULL;
 
-Mesh* mesh_man = NULL;
+
 
 Texture* texture = NULL;
 
@@ -79,9 +79,10 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
-	mesh_cube = Mesh::Get("data/box.ASE");
+	mesh_wall = Mesh::Get("data/wall.obj");
 	mesh_man = Mesh::Get("data/man.obj");
-	texture_cube = Texture::Get("data/sptifire/sptifire_low_flat.tga");
+	mesh_pistol = Mesh::Get("data/pistol.obj");
+	texture_wall = Texture::Get("data/wall.png");
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
@@ -124,28 +125,24 @@ void Game::render(void)
     Entity ground = Entity(Matrix44(), mesh_ground, texture_ground);
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	
-	
-	//Matrix44 m;
-	//m.rotate(angle*DEG2RAD, Vector3(0, 1, 0));
 
-	//Matrix44 m2;
-	//m2.translate(150, 0, 0);
-	//m2.rotate(angle * DEG2RAD, Vector3(0, 1, 0));
-	//m2.scale(100, 100, 100);
 	Matrix44 playerModel;
     playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
-	playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
+	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
+	//playerModel.rotate(180 * DEG2RAD, Vector3(1, 0, 0));
 	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
-	
+	playerModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
 
-	if (cameraLocked) { //en aquet cas hi ha la possibilitat de les dues vistes, pero si ens quedem amb un FirstPerson, sobra la mitad de aqest if
+	if (cameraLocked) {
 
 		Matrix44 camModel = playerModel;
-		camModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));// Girem la camera perque sinos apunta cap al darrera
-		camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
+		//camModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));// Girem la camera perque sinos apunta cap al darrera
+		//camModel.rotate(180 * DEG2RAD, Vector3(1, 0, 0));// Girem la camera perque sinos apunta cap al darrera
+		//camModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
-		Vector3 eye = playerModel * Vector3(0, 1, -0.5);
+
+		Vector3 eye = playerModel * Vector3(0, 0.7, 0.5); //segon valor altura camera
 		Vector3 center = eye + camModel.rotateVector(Vector3(0, 0, -1));
 		Vector3 up = camModel.rotateVector(Vector3(0, 1, 0));
 		
@@ -155,7 +152,7 @@ void Game::render(void)
 	
     
     //CREAR JUGADOR
-	Entity player_entity = Entity(playerModel, mesh_man, texture_black);
+	Entity player_entity = Entity(playerModel, mesh_pistol, texture_black);
 
 	player_entity.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
     
@@ -165,12 +162,6 @@ void Game::render(void)
 		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
-//	Mesh m;
-//	m.vertices = points;
-//	Entity* point = new Entity(Matrix44(), &m, NULL);
-//	glPointSize(4.0f);
-//	point->RenderEntity(GL_POINTS, Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs"), camera, cameraLocked);
-//	glPointSize(1.0f);
 
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
@@ -256,7 +247,7 @@ void Game::update(double seconds_elapsed)
 			Vector3 coll;
 			Vector3 collnorm;
 			//comprobamos si colisiona el objeto con la esfera (radio 3)
-			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 3, coll, collnorm))
+			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.5, coll, collnorm))
 				continue; //si no colisiona, pasamos al siguiente objeto
 
 			//si la esfera está colisionando muevela a su posicion anterior alejandola del objeto
@@ -292,14 +283,30 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
-    
+    //FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
 	for (size_t i = 0; i < entities.size(); i++)
 	{
-		Entity* entity = entities[i];
+		Entity* entity = entities[i]; // cercam les BULLETS
 		if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
-			//Matrix44 model_bullet;
-            Bullet* bullet = (Bullet*)(entity);
-            bullet->update_position(elapsed_time);
+			float vel = 100.f;
+			entity->update_position_moving(elapsed_time, vel);
+
+			Vector3 bullet_center = entity->model.getTranslation();
+
+			for (size_t j = 0; j < entities.size(); j++)
+			{
+				Entity* currentEntity = entities[j]; //cercam enemics
+
+				if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
+					Vector3 coll;
+					Vector3 collnorm;
+					//comprobamos si colisiona el objeto con la esfera
+					if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
+						entities.erase(entities.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
+						break;
+					}
+				}
+			}
 		}
 	}
     
@@ -321,10 +328,10 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
             break;
         case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
         case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
-		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities, selectedEntity); break;
+		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities); break;
 		case SDLK_0: world.saveWorld(entities); break;
 		case SDLK_9: entities = world.loadWorld(entities); break;
-		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 2; //canviar enum sense bullet (enum = 2)
+		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 3; //canviar enum sense bullet (enum = 2)
 			
 
 	}

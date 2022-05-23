@@ -112,9 +112,13 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
         mesh = g->mesh_house;
         texture = g->texture_black;
     }
-    else if (entityToAdd == Entity::ENTITY_ID::CUBE) {
-        mesh = g->mesh_cube;
-        texture = g->texture_cube;
+    else if (entityToAdd == Entity::ENTITY_ID::WALL) {
+        mesh = g->mesh_wall;
+        texture = g->texture_wall;
+    }
+    else if (entityToAdd == Entity::ENTITY_ID::ENEMY) {
+        mesh = g->mesh_man;
+        texture = g->texture_black;
     }
     Vector2 mousePos = Input::mouse_position;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
@@ -125,6 +129,7 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
     model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
 
     Entity* entity = new Entity(model, mesh, texture);
+    entity->current_entity = (Entity::ENTITY_ID)entityToAdd;
     entities.push_back(entity);
     return entities;
 }
@@ -163,7 +168,7 @@ void World::RotateSelected(float angleDegrees, Entity* selectedEntity)
     printf("rotating %f degrees\n", angleDegrees);
 }
 
-std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity) {
+std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities) {
     
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;

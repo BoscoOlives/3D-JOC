@@ -44,8 +44,10 @@ public:
     bool slowMotion = false;
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	Mesh* mesh_house = NULL;
-	Mesh* mesh_cube = NULL;
-	Texture* texture_cube = NULL;
+	Mesh* mesh_wall = NULL;
+	Mesh* mesh_man = NULL;
+	Mesh* mesh_pistol = NULL;
+	Texture* texture_wall = NULL;
 
 	
 	
