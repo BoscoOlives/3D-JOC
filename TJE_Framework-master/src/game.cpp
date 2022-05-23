@@ -172,7 +172,7 @@ void Game::render(void)
 
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
-		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity";
+		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n";
 		drawText(this->window_width-200, 2, text_edicio, Vector3(1, 1, 1), 2);
 	}
 
