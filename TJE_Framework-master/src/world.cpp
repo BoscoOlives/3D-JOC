@@ -59,7 +59,9 @@ void World::saveWorld(std::vector<Entity*> entities) {
             std::to_string(model._41) + "\n" + std::to_string(model._42) + "\n" + std::to_string(model._43) + "\n" + std::to_string(model._44) + "\n" };
 
         const char* buffer = str.c_str();
-        fwrite(buffer, int(strlen(buffer) / 4), sizeof(buffer), file);
+        printf("%d\n", sizeof(char));
+        printf("%d\n", strlen(buffer));
+        fwrite(buffer, sizeof(char), strlen(buffer), file);
     }
     fclose(file);
 }
@@ -86,7 +88,7 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
             if (i == 15) { //quan es porten 16 valors de una matriu, es dona per suposat que es troba una nova MODEL
                 Entity* entity = new Entity(model, mesh, texture);
                 entities.push_back(entity);
-                i = 0;
+                i = -1;
             }
             std::cout << line << "\n";
             i = i+1;
