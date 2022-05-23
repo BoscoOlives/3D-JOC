@@ -52,16 +52,18 @@ void World::saveWorld(std::vector<Entity*> entities) {
         //    const char* buffer = str.c_str();
         //    fwrite(buffer, strlen(buffer) / 4 + 1, sizeof(buffer), file);
         //}
-        std::string str = {
-            std::to_string(model._11)+"\n"+std::to_string(model._12)+"\n"+std::to_string(model._13)+"\n"+std::to_string(model._14)+"\n"+
-            std::to_string(model._21)+"\n"+ std::to_string(model._22)+"\n"+ std::to_string(model._23)+"\n"+std::to_string(model._24)+"\n"+
-            std::to_string(model._31)+"\n"+ std::to_string(model._32)+"\n"+ std::to_string(model._33)+"\n"+ std::to_string(model._34)+"\n"+
+
+        if (entity->current_entity != Entity::ENTITY_ID::BULLET) {
+            std::string str = {
+            std::to_string(model._11) + "\n" + std::to_string(model._12) + "\n" + std::to_string(model._13) + "\n" + std::to_string(model._14) + "\n" +
+            std::to_string(model._21) + "\n" + std::to_string(model._22) + "\n" + std::to_string(model._23) + "\n" + std::to_string(model._24) + "\n" +
+            std::to_string(model._31) + "\n" + std::to_string(model._32) + "\n" + std::to_string(model._33) + "\n" + std::to_string(model._34) + "\n" +
             std::to_string(model._41) + "\n" + std::to_string(model._42) + "\n" + std::to_string(model._43) + "\n" + std::to_string(model._44) + "\n" };
 
-        const char* buffer = str.c_str();
-        printf("%d\n", sizeof(char));
-        printf("%d\n", strlen(buffer));
-        fwrite(buffer, sizeof(char), strlen(buffer), file);
+            const char* buffer = str.c_str();
+
+            fwrite(buffer, sizeof(char), strlen(buffer), file);
+        }
     }
     fclose(file);
 }
@@ -74,7 +76,6 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
 
     std::string line;
     std::ifstream myfile("world.txt");
-   // std::cout << myfile.rdbuf();
 
     Matrix44 model;
     if (myfile.is_open())
@@ -102,9 +103,20 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
 
 }
 
-std::vector<Entity*> World::AddEntityInFront(Camera* cam, Mesh* mesh, Texture* texture, std::vector<Entity*> entities) {
-    Vector2 mousePos = Input::mouse_position;
+std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities) {
     Game* g = Game::instance;
+    Mesh* mesh;
+    Texture* texture;
+    printf("entitytoadd: %d\n", entityToAdd);
+    if (entityToAdd == Entity::ENTITY_ID::HOUSE) {
+        mesh = g->mesh_house;
+        texture = g->texture_black;
+    }
+    else if (entityToAdd == Entity::ENTITY_ID::CUBE) {
+        mesh = g->mesh_cube;
+        texture = g->texture_cube;
+    }
+    Vector2 mousePos = Input::mouse_position;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
 

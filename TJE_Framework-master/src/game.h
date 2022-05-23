@@ -42,6 +42,11 @@ public:
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
     bool slowMotion = false;
+	int entityToAdd = Entity::ENTITY_ID::HOUSE;
+	Mesh* mesh_house = NULL;
+	Mesh* mesh_cube = NULL;
+	Texture* texture_cube = NULL;
+
 	
 	
     

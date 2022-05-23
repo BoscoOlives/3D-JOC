@@ -19,7 +19,8 @@ public:
 
 	enum ENTITY_ID {
 		HOUSE = 0,
-		BULLET = 1,
+		CUBE = 1,
+		BULLET = 2,
 	};
 
 	ENTITY_ID current_entity;

@@ -17,7 +17,7 @@
 
 //some globals
 Mesh* mesh = NULL;
-Mesh* mesh_house = NULL;
+
 Mesh* mesh_man = NULL;
 
 Texture* texture = NULL;
@@ -79,7 +79,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
+	mesh_cube = Mesh::Get("data/box.ASE");
 	mesh_man = Mesh::Get("data/man.obj");
+	texture_cube = Texture::Get("data/sptifire/sptifire_low_flat.tga");
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
@@ -313,7 +315,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
-        case SDLK_2: entities = world.AddEntityInFront(camera, mesh_house, texture_black, entities); break;
+        case SDLK_2: entities = world.AddEntityInFront(camera, entityToAdd, entities); break;
         case SDLK_3: selectedEntity = world.RayPick(camera, points, entities, selectedEntity);
             if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
             break;
@@ -322,6 +324,9 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities, selectedEntity); break;
 		case SDLK_0: world.saveWorld(entities); break;
 		case SDLK_9: entities = world.loadWorld(entities); break;
+		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 2; //canviar enum sense bullet (enum = 2)
+			
+
 	}
 }
 
