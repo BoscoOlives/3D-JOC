@@ -25,22 +25,18 @@ public:
     std::vector<Player*> enemies;
     std::vector<Entity*> entities;
     //buildings, stages, scores...
-    
+
     World();
-    
+
     void saveWorld(std::vector<Entity*> entities);
     std::vector<Entity*> loadWorld(std::vector<Entity*> entities);
-    
+
     std::vector<Entity*> AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities);
     Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity);
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
-    std::vector<Entity*> DeleteEnemy(std::vector<Entity*> entities, Entity* entity);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
-
+    std::vector<Entity*> shooting_update(std::vector<Entity*> entities);
 };
-
-
-
 
 #endif /* world_h */
