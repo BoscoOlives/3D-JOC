@@ -51,11 +51,13 @@ public:
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	float angle;
 	float mouse_speed;
+	Mesh* mesh_sky = NULL;
 	Mesh* mesh_house = NULL;
 	Mesh* mesh_wall = NULL;
 	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
 	Mesh* mesh_ring = NULL;
+	Texture* texture_sky = NULL;
 	Texture* texture_ring = NULL;
 	Texture* texture_wall = NULL;
 	Mesh* mesh_ground = NULL;

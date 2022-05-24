@@ -74,8 +74,7 @@ void Game::render(void)
    
 	camera->enable();
     
-    Texture* texture_sky = Texture::Get("data/sky/sky.tga");
-    Mesh* mesh_sky = Mesh::Get("data/sky/sky.ASE");
+    
     Matrix44 skyModel;
     skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
     Entity background = Entity(skyModel, mesh_sky, texture_sky);
@@ -105,7 +104,7 @@ void Game::render(void)
 
 
 		Vector3 eye = playerModel * Vector3(0, 0.7, 0.5); //segon valor altura camera
-		//Vector3 eye = world.Lerp(camera->eye, desiredeEye, 20.f * elapsed_time); //Lerp perque es vegi sa pistola una mica de costat quan ens movem
+		//Vector3 eye = world.Lerp(camera->eye, desiredeEye, 100.f * elapsed_time); //Lerp perque es vegi sa pistola una mica de costat quan ens movem
 		Vector3 center = eye + camModel.rotateVector(Vector3(0, 0, -1));
 		Vector3 up = camModel.rotateVector(Vector3(0, 1, 0));
 		
@@ -330,6 +329,9 @@ void Game::loadTexturesAndMeshes() {
 	
 	mesh_ring = Mesh::Get("data/tanca.obj");
 	texture_ring = Texture::Get("data/tancarParets.png");
+
+	texture_sky = Texture::Get("data/sky/sky.tga");
+	mesh_sky = Mesh::Get("data/sky/sky.ASE");
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
