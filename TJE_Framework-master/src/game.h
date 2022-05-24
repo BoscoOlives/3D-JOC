@@ -47,6 +47,8 @@ public:
 	Mesh* mesh_wall = NULL;
 	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
+	Mesh* mesh_ring = NULL;
+	Texture* texture_ring = NULL;
 	Texture* texture_wall = NULL;
 
 	

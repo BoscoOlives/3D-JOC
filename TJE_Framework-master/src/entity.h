@@ -21,7 +21,8 @@ public:
 		HOUSE = 0,
 		WALL = 1,
 		ENEMY = 2,
-		BULLET = 3
+		RING = 3,
+		BULLET = 4
 	};
 
 	ENTITY_ID current_entity;

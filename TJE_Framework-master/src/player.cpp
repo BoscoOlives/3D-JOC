@@ -35,9 +35,9 @@ std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, 
     model.scale(0.05, 0.05, 0.05);
     Texture* texture_bullet = g->texture_black; //la textura de la bala es tota negra
     
-    Vector3 position; //inicialitzem la posicio de la bala devant del PLAYER
+    Vector3 position = this->pos + Vector3(0.0f, 0.5f, 0.0f); //inicialitzem la posicio de la bala devant del PLAYER
 
-    model.setTranslation(this->pos.x, this->pos.y, this->pos.z);
+    model.setTranslation(position.x, position.y, position.z);
 
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
     entity_bullet->current_entity = Entity::ENTITY_ID::BULLET;

@@ -13,27 +13,8 @@
 
 World* World::instance = NULL;
 
-class Prop { //SERVIRA PER EXPORTAR EN UN .TXT TOTA LA INFO DE ON GENEREM LES ENTITATS I UN IDENTIFICADOR (video Programando un Mundo 1:50:00)
-    int id;
-    Mesh* mesh;
-    Texture* texture;
-};
-Prop props[20];
-/*Funció que guarda el món:
-ID Entity int
-POSITION Vector3
-ROTATION Vector3
-SCALE Vector3
-
-
-escupir Model
-path Mesh
-path Texture
-
-*/
-
 World::World() {
-    instance = this;
+    instance = this;    
     //this->player = Player();
 }
 
@@ -124,6 +105,10 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
         mesh = g->mesh_man;
         texture = g->texture_black;
     }
+    else if (id == Entity::ENTITY_ID::RING) {
+        mesh = g->mesh_ring;
+        texture = g->texture_ring;
+    }
 }
 
 std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities) {
@@ -201,4 +186,35 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
     printf("No Entity Removed\n");
     return entities;
      
+}
+
+std::vector<Entity*> World::shooting_update(std::vector<Entity*> entities) {
+    // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
+    Game* g = Game::instance;
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        Entity* entity = entities[i]; // cercam les BULLETS
+        if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
+            float vel = 100.f;
+            entity->update_position_moving(g->elapsed_time, vel);
+
+            Vector3 bullet_center = entity->model.getTranslation();
+
+            for (size_t j = 0; j < entities.size(); j++)
+            {
+                Entity* currentEntity = entities[j]; //cercam enemics
+
+                if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
+                    Vector3 coll;
+                    Vector3 collnorm;
+                    //comprobamos si colisiona el objeto con la esfera
+                    if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
+                        entities.erase(entities.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return entities;
 }

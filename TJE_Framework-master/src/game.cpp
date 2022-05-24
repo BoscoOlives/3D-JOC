@@ -82,7 +82,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	mesh_wall = Mesh::Get("data/wall.obj");
 	mesh_man = Mesh::Get("data/man.obj");
 	mesh_pistol = Mesh::Get("data/pistol.obj");
+	mesh_ring = Mesh::Get("data/tanca.obj");
 	texture_wall = Texture::Get("data/wall.png");
+	texture_ring = Texture::Get("data/tancarParets.png");
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
@@ -214,7 +216,7 @@ void Game::update(double seconds_elapsed)
     
 	SDL_ShowCursor(!cameraLocked);
 	if (cameraLocked) { //moviment player
-		float playerSpeed = 20.0f * elapsed_time;
+		float playerSpeed = 5.0f * elapsed_time;
 		float rotSpeed = 150.0f * elapsed_time;
         
         //if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
@@ -266,10 +268,7 @@ void Game::update(double seconds_elapsed)
 
 		//Generem una bala / bullet
 		
-		if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
-			entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
-			
-		}
+		
 
 	}
 	else {
@@ -283,32 +282,11 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
-    //FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
-	for (size_t i = 0; i < entities.size(); i++)
-	{
-		Entity* entity = entities[i]; // cercam les BULLETS
-		if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
-			float vel = 100.f;
-			entity->update_position_moving(elapsed_time, vel);
+	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
+		entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
 
-			Vector3 bullet_center = entity->model.getTranslation();
-
-			for (size_t j = 0; j < entities.size(); j++)
-			{
-				Entity* currentEntity = entities[j]; //cercam enemics
-
-				if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
-					Vector3 coll;
-					Vector3 collnorm;
-					//comprobamos si colisiona el objeto con la esfera
-					if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
-						entities.erase(entities.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
-						break;
-					}
-				}
-			}
-		}
 	}
+	entities = world.shooting_update(entities);
     
 	//to navigate with the mouse fixed in the middle
 	if (mouse_locked)
@@ -331,7 +309,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities); break;
 		case SDLK_0: world.saveWorld(entities); break;
 		case SDLK_9: entities = world.loadWorld(entities); break;
-		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 3; //canviar enum sense bullet (enum = 2)
+		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 4; //canviar enum sense bullet (enum = 4)
 			
 
 	}
