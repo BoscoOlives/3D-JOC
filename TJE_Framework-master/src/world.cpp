@@ -195,7 +195,7 @@ std::vector<Entity*> World::shooting_update(std::vector<Entity*> entities) {
     {
         Entity* entity = entities[i]; // cercam les BULLETS
         if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
-            float vel = 100.f;
+            float vel = 70.f;
             entity->update_position_moving(g->elapsed_time, vel);
 
             Vector3 bullet_center = entity->model.getTranslation();
@@ -217,4 +217,9 @@ std::vector<Entity*> World::shooting_update(std::vector<Entity*> entities) {
         }
     }
     return entities;
+}
+
+Vector3 World::Lerp(Vector3 a, Vector3 b, float t) {
+    Vector3 ab = b - a;
+    return a + (ab * t);
 }

@@ -1,11 +1,7 @@
 #include "game.h"
 #include "utils.h"
-#include "mesh.h"
-#include "texture.h"
-#include "fbo.h"
-#include "shader.h"
 #include "input.h"
-#include "animation.h"
+
 
 
 
@@ -15,37 +11,12 @@
 
 //#define EDITOR
 
-//some globals
-Mesh* mesh = NULL;
-
-
-
-Texture* texture = NULL;
-
-
-bool cameraLocked = false;
-bool bombAttached = true;
-
-Shader* shader = NULL;
-
-Animation* anim = NULL;
-float angle = 0;
-float mouse_speed = 100.0f;
-FBO* fbo = NULL;
-
-
 Game* Game::instance = NULL;
 
-const int planes_width = 200;
-const int planes_height = 200;
-float padding = 20.0f;
 
 float lod_distance = 200.0f;
 float no_render_distance = 1000.0f;
 
-
-Mesh* mesh_ground;
-Texture* texture_ground;
 
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
@@ -60,6 +31,10 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	time = 0.0f;
 	elapsed_time = 0.0f;
 	mouse_locked = false;
+	cameraLocked = false;
+	slowMotion = false;
+	angle = 0;
+	mouse_speed = 100.0f;
 
 	//OpenGL flags
 	glEnable( GL_CULL_FACE ); //render both sides of every triangle
@@ -67,28 +42,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
     
 	//create our camera
 	camera = new Camera();
-	camera->lookAt(Vector3(0.f,100.f, 100.f),Vector3(0.f,0.f,0.f), Vector3(0.f,1.f,0.f)); //position the camera and point to 0,0,0
+	camera->lookAt(Vector3(0.f,50.f, 50.f),Vector3(0.f,0.f,0.f), Vector3(0.f,1.f,0.f)); //position the camera and point to 0,0,0
 	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,100000.f); //set the projection, we want to be perspective
     
-    
-    
-    mesh_ground = new Mesh();
-    mesh_ground->createPlane(1000);
-    texture_ground = Texture::Get("data/ground.tga");
-	
-	//EXMPLE FETS A CLASSE, HAURIEN DE SER ENTITIES
+	//Load Mesh i Textures
+	loadTexturesAndMeshes();
 
-	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
-	mesh_wall = Mesh::Get("data/wall.obj");
-	mesh_man = Mesh::Get("data/man.obj");
-	mesh_pistol = Mesh::Get("data/pistol.obj");
-	mesh_ring = Mesh::Get("data/tanca.obj");
-	texture_wall = Texture::Get("data/wall.png");
-	texture_ring = Texture::Get("data/tancarParets.png");
-
-	texture_black = texture_black->getBlackTexture();
-	texture_white = texture_black->getWhiteTexture();
-	
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
 
@@ -128,12 +87,13 @@ void Game::render(void)
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	
 
-	Matrix44 playerModel;
-    playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
+    //playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
+	playerModel.setTranslation(player->pos.x, player->pos.y, player->pos.z);
 	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
 	//playerModel.rotate(180 * DEG2RAD, Vector3(1, 0, 0));
 	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 	playerModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
+
 
 
 	if (cameraLocked) {
@@ -145,14 +105,16 @@ void Game::render(void)
 
 
 		Vector3 eye = playerModel * Vector3(0, 0.7, 0.5); //segon valor altura camera
+		//Vector3 eye = world.Lerp(camera->eye, desiredeEye, 20.f * elapsed_time); //Lerp perque es vegi sa pistola una mica de costat quan ens movem
 		Vector3 center = eye + camModel.rotateVector(Vector3(0, 0, -1));
 		Vector3 up = camModel.rotateVector(Vector3(0, 1, 0));
 		
-              
 		camera->lookAt(eye, center, up);
 	}
 	
-    
+	if (player->shoot) { //moviment que provoca un shot a la arma
+		playerModel = player->Coil(elapsed_time, playerModel);
+	}
     //CREAR JUGADOR
 	Entity player_entity = Entity(playerModel, mesh_pistol, texture_black);
 
@@ -167,8 +129,12 @@ void Game::render(void)
 
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
-		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n";
+		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n + Change Entity to Add\n";
 		drawText(this->window_width-200, 2, text_edicio, Vector3(1, 1, 1), 2);
+	}
+	if (cameraLocked) {//TEXT TECLES MODE GAMEPLAY
+		std::string text_gameplay = "SPACE Shot\nWASD Move Player\nMouse Move Camera\n";
+		drawText(this->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
 	}
 
 
@@ -185,10 +151,7 @@ void Game::render(void)
 
 void Game::update(double seconds_elapsed)
 {
-    if (slowMotion) {
-        elapsed_time *= 0.1f;
-    }
-    
+	slowMotion = true;    
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
 	//example
@@ -207,12 +170,6 @@ void Game::update(double seconds_elapsed)
 		
 		cameraLocked = !cameraLocked;
 	}
-    
-    if (Input::wasKeyPressed(SDL_SCANCODE_P)) {
-        slowMotion = !slowMotion;
-        if (slowMotion) printf("slow motion\n");
-        else printf("normal speed\n");
-    }
     
 	SDL_ShowCursor(!cameraLocked);
 	if (cameraLocked) { //moviment player
@@ -233,10 +190,15 @@ void Game::update(double seconds_elapsed)
         Vector3 right = playerRotation.rotateVector(Vector3(1,0,0));
         Vector3 playerVel;
         
-        if (Input::isKeyPressed(SDL_SCANCODE_W)) playerVel = playerVel + (playerSpeed * forward);
-        if (Input::isKeyPressed(SDL_SCANCODE_S)) playerVel = playerVel - (playerSpeed * forward);
-        if (Input::isKeyPressed(SDL_SCANCODE_D)) playerVel = playerVel + (playerSpeed * right);
-        if (Input::isKeyPressed(SDL_SCANCODE_A)) playerVel = playerVel - (playerSpeed * right);
+		
+		if (Input::isKeyPressed(SDL_SCANCODE_W)) { playerVel = playerVel + (playerSpeed * forward); slowMotion = false; }
+		if (Input::isKeyPressed(SDL_SCANCODE_S)) { playerVel = playerVel - (playerSpeed * forward);  slowMotion = false; }
+		if (Input::isKeyPressed(SDL_SCANCODE_D)) { playerVel = playerVel + (playerSpeed * right); slowMotion = false; }
+		if (Input::isKeyPressed(SDL_SCANCODE_A)) { playerVel = playerVel - (playerSpeed * right);  slowMotion = false; }
+
+		if (slowMotion) {
+			elapsed_time *= 0.04f;
+		}
 
 		Vector3 nexPos = player->pos + playerVel;
 		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
@@ -262,13 +224,7 @@ void Game::update(double seconds_elapsed)
 			//reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
 			//velocity = reflect(velocity, collnorm) * 0.95;
 		}
-
-
         player->pos = nexPos;
-
-		//Generem una bala / bullet
-		
-		
 
 	}
 	else {
@@ -282,10 +238,12 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
-	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
+	//Generem una bala / bullet
+	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shoot) { //solament pot disparar quan ha acabat la animació de disparar
 		entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
-
+		player->shoot = true;
 	}
+	//update bala de la posicio i si colisiona amb enemics
 	entities = world.shooting_update(entities);
     
 	//to navigate with the mouse fixed in the middle
@@ -354,4 +312,25 @@ void Game::onResize(int width, int height)
 	camera->aspect =  width / (float)height;
 	window_width = width;
 	window_height = height;
+}
+
+void Game::loadTexturesAndMeshes() {
+	mesh_ground = new Mesh();
+	mesh_ground->createPlane(1000);
+	texture_ground = Texture::Get("data/ground.tga");
+
+	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
+
+	mesh_wall = Mesh::Get("data/wall.obj");
+	texture_wall = Texture::Get("data/wall.png");
+
+	mesh_man = Mesh::Get("data/man.obj");
+	
+	mesh_pistol = Mesh::Get("data/pistol.obj");
+	
+	mesh_ring = Mesh::Get("data/tanca.obj");
+	texture_ring = Texture::Get("data/tancarParets.png");
+
+	texture_black = texture_black->getBlackTexture();
+	texture_white = texture_black->getWhiteTexture();
 }

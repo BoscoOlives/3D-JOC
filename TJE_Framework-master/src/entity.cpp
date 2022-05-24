@@ -46,8 +46,8 @@ void Entity::update_position_moving(float elapsed_time, float vel) {
     Vector3 pos;
     pos = this->model.getTranslation();
 	
-    pos = pos + this->dir * 100.0f * elapsed_time;
+    pos = pos + this->dir * vel * elapsed_time;
 
     this->model.setTranslation(pos.x, pos.y, pos.z);
-	this->model.scale(0.05, 0.05, 0.05);
+	this->model.scale(0.01, 0.01, 0.01);
 }

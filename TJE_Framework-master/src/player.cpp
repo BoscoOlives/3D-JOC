@@ -12,17 +12,15 @@
 
 
 Player* Player::instance = NULL;
-//struct sBullet {
-//    Vector3 pos;
-//    int vel = 100.f;
-//}; 
-//sBullet bullet;
 
 Player::Player() {
     instance = this;
     shooting = false;
     this->pitch = 0.0f;
     this->yaw = 0.0f;
+    gunAngle = 0.0f;
+    shoot = false;
+    gunUp = true;
 }
 
 std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
@@ -32,7 +30,7 @@ std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, 
 
     Mesh* mesh_bullet = Mesh::Get("data/sphere.obj");
     Matrix44 model;
-    model.scale(0.05, 0.05, 0.05);
+    model.scale(0.01, 0.01, 0.01);
     Texture* texture_bullet = g->texture_black; //la textura de la bala es tota negra
     
     Vector3 position = this->pos + Vector3(0.0f, 0.5f, 0.0f); //inicialitzem la posicio de la bala devant del PLAYER
@@ -45,4 +43,27 @@ std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, 
 
     entities.push_back(entity_bullet);
     return entities;
+}
+
+Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
+    
+    if (gunUp) {
+        gunAngle += 1000.0f * elapsed_time;
+    }
+    if (gunAngle >= 45.0f) {
+        gunUp = false;    
+    }
+
+    if(!gunUp){
+        gunAngle -= 1000.0f * elapsed_time;
+    }
+    gun.rotate(-gunAngle * DEG2RAD, Vector3(1, 0, 0) * elapsed_time);
+
+    if(gunAngle <= 0.0f){
+        gunAngle = 0.0f;
+        this->gunUp = true;
+        this->shoot = false;
+    }
+    
+    return gun;
 }

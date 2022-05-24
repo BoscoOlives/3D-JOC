@@ -22,10 +22,13 @@ public:
     float yaw;
     float pitch;
     bool shooting;
+    float gunAngle;
+    bool shoot;
+    bool gunUp;
 
     Player();
     std::vector<Entity*> Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities);
-
+    Matrix44 Coil(float elapsed_time, Matrix44 gun);
 };
 
 

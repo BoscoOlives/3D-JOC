@@ -11,6 +11,11 @@
 #include "entity.h"
 #include "world.h"
 #include "player.h"
+#include "animation.h"
+#include "mesh.h"
+#include "texture.h"
+#include "fbo.h"
+#include "shader.h"
 
 class Game
 {
@@ -41,8 +46,11 @@ public:
 	Player* player = &world.player;
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
-    bool slowMotion = false;
+	bool slowMotion;
+	bool cameraLocked;
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
+	float angle;
+	float mouse_speed;
 	Mesh* mesh_house = NULL;
 	Mesh* mesh_wall = NULL;
 	Mesh* mesh_man = NULL;
@@ -50,7 +58,12 @@ public:
 	Mesh* mesh_ring = NULL;
 	Texture* texture_ring = NULL;
 	Texture* texture_wall = NULL;
-
+	Mesh* mesh_ground = NULL;
+	Texture* texture_ground = NULL;
+	Shader* shader = NULL;
+	Animation* anim = NULL;
+	FBO* fbo = NULL;
+	Matrix44 playerModel;
 	
 	
     
@@ -70,6 +83,9 @@ public:
 	void onGamepadButtonDown(SDL_JoyButtonEvent event);
 	void onGamepadButtonUp(SDL_JoyButtonEvent event);
 	void onResize(int width, int height);
+
+	//funcions BOSCO & RICCI
+	void loadTexturesAndMeshes();
 
 };
 

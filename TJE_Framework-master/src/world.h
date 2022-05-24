@@ -37,6 +37,7 @@ public:
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
     std::vector<Entity*> shooting_update(std::vector<Entity*> entities);
+    Vector3 Lerp(Vector3 a, Vector3 b, float t);
 };
 
 #endif /* world_h */
