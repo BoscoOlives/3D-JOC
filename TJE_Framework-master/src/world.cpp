@@ -54,7 +54,8 @@ void World::saveWorld(std::vector<Entity*> entities) {
         //}
 
         if (entity->current_entity != Entity::ENTITY_ID::BULLET) {
-            std::string str = {
+            std::string str = { 
+            std::to_string(entity->current_entity) + "\n" +
             std::to_string(model._11) + "\n" + std::to_string(model._12) + "\n" + std::to_string(model._13) + "\n" + std::to_string(model._14) + "\n" +
             std::to_string(model._21) + "\n" + std::to_string(model._22) + "\n" + std::to_string(model._23) + "\n" + std::to_string(model._24) + "\n" +
             std::to_string(model._31) + "\n" + std::to_string(model._32) + "\n" + std::to_string(model._33) + "\n" + std::to_string(model._34) + "\n" +
@@ -69,11 +70,10 @@ void World::saveWorld(std::vector<Entity*> entities) {
 }
 std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
     //load player, enemies (positions, rotations...)
-    Mesh* mesh = NULL;
-    mesh = Mesh::Get("data/bar-tropic_0.obj"); //canviar (ha d'estar al .txt)
-    Texture* texture = NULL;
-    texture = Game::instance->texture_black; //canviar (ha d'estar al .txt)
-
+    Game* g = Game::instance;
+    Mesh* mesh;
+    Texture* texture;
+    int id;
     std::string line;
     std::ifstream myfile("world.txt");
 
@@ -83,11 +83,17 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
         int i = 0;
         while (getline(myfile, line))
         {
-            if (i < 16) { //16 valors de la MODEL matrix44
-                model.m[i] = std::stof(line); //cast de string a float
+            if (i == 0) {
+                id = std::stoi(line);
             }
-            if (i == 15) { //quan es porten 16 valors de una matriu, es dona per suposat que es troba una nova MODEL
+            else if (i>0 && i<17) { //16 valors de la MODEL matrix44
+                model.m[i-1] = std::stof(line); //cast de string a float
+            }
+            if (i == 16) { //quan es porten 16 valors de una matriu, es dona per suposat que es troba una nova MODEL
+                this->get_Mesh_Texture_Entity(id, mesh, texture); //funció per obtenir la mesh i la texture depenent de la ID
                 Entity* entity = new Entity(model, mesh, texture);
+                entity->current_entity = (Entity::ENTITY_ID)id;
+                
                 entities.push_back(entity);
                 i = -1;
             }
@@ -103,23 +109,29 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
 
 }
 
+void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//funció per obtenir la mesh i la texture depenent de la ID
+    Game* g = Game::instance;
+
+    if (id == Entity::ENTITY_ID::HOUSE) {
+        mesh = g->mesh_house;
+        texture = g->texture_black;
+    }
+    else if (id == Entity::ENTITY_ID::WALL) {
+        mesh = g->mesh_wall;
+        texture = g->texture_wall;
+    }
+    else if (id == Entity::ENTITY_ID::ENEMY) {
+        mesh = g->mesh_man;
+        texture = g->texture_black;
+    }
+}
+
 std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities) {
     Game* g = Game::instance;
     Mesh* mesh;
     Texture* texture;
-    printf("entitytoadd: %d\n", entityToAdd);
-    if (entityToAdd == Entity::ENTITY_ID::HOUSE) {
-        mesh = g->mesh_house;
-        texture = g->texture_black;
-    }
-    else if (entityToAdd == Entity::ENTITY_ID::WALL) {
-        mesh = g->mesh_wall;
-        texture = g->texture_wall;
-    }
-    else if (entityToAdd == Entity::ENTITY_ID::ENEMY) {
-        mesh = g->mesh_man;
-        texture = g->texture_black;
-    }
+    this->get_Mesh_Texture_Entity(entityToAdd, mesh, texture);//funció per obtenir la mesh i la texture depenent de la ID
+
     Vector2 mousePos = Input::mouse_position;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
