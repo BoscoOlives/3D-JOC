@@ -49,5 +49,6 @@ void Entity::update_position_moving(float elapsed_time, float vel) {
     pos = pos + this->dir * vel * elapsed_time;
 
     this->model.setTranslation(pos.x, pos.y, pos.z);
-	this->model.scale(0.01, 0.01, 0.01);
+	this->model.rotate(Game::instance->player->yaw * DEG2RAD, Vector3(0, 1, 0));
+	//this->model.scale(0.01, 0.01, 0.01);
 }

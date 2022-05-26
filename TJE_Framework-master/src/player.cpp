@@ -28,14 +28,16 @@ std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, 
     Game* g = Game::instance;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
 
-    Mesh* mesh_bullet = Mesh::Get("data/sphere.obj");
+    Mesh* mesh_bullet = g->mesh_bullet;
     Matrix44 model;
-    model.scale(0.01, 0.01, 0.01);
-    Texture* texture_bullet = g->texture_black; //la textura de la bala es tota negra
+    //model.scale(0.01, 0.01, 0.01);
+    Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
     Vector3 position = this->pos + Vector3(0.0f, 0.5f, 0.0f); //inicialitzem la posicio de la bala devant del PLAYER
 
     model.setTranslation(position.x, position.y, position.z);
+
+    model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
 
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
     entity_bullet->current_entity = Entity::ENTITY_ID::BULLET;

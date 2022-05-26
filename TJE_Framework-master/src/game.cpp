@@ -85,6 +85,12 @@ void Game::render(void)
     Entity ground = Entity(Matrix44(), mesh_ground, texture_ground);
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	
+	//-------------------RENDER DEL PUNT DE COLISIO!-------------------
+	/*Matrix44 model_colision;
+	model_colision.setTranslation(character_center.x, character_center.y, character_center.z);
+	Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
+	ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
+	//-----------------------------------------------------------------
 
     //playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
 	playerModel.setTranslation(player->pos.x, player->pos.y, player->pos.z);
@@ -187,7 +193,7 @@ void Game::update(double seconds_elapsed)
         
         Vector3 forward = playerRotation.rotateVector(Vector3(0,0,-1));
         Vector3 right = playerRotation.rotateVector(Vector3(1,0,0));
-        Vector3 playerVel;
+        Vector3 playerVel;	
         
 		
 		if (Input::isKeyPressed(SDL_SCANCODE_W)) { playerVel = playerVel + (playerSpeed * forward); slowMotion = false; }
@@ -196,12 +202,12 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_A)) { playerVel = playerVel - (playerSpeed * right);  slowMotion = false; }
 
 		if (slowMotion) {
-			elapsed_time *= 0.04f;
+			elapsed_time *= 0.01f;
 		}
 
 		Vector3 nexPos = player->pos + playerVel;
 		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
-		Vector3 character_center = nexPos + Vector3(0, 1, 0);
+		character_center = nexPos + Vector3(0, 0.5, 0);
 
 		for (size_t i = 0; i < entities.size(); i++)
 		{
@@ -210,7 +216,7 @@ void Game::update(double seconds_elapsed)
 			Vector3 coll;
 			Vector3 collnorm;
 			//comprobamos si colisiona el objeto con la esfera (radio 3)
-			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.5, coll, collnorm))
+			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm))
 				continue; //si no colisiona, pasamos al siguiente objeto
 
 			//si la esfera está colisionando muevela a su posicion anterior alejandola del objeto
@@ -266,7 +272,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities); break;
 		case SDLK_0: world.saveWorld(entities); break;
 		case SDLK_9: entities = world.loadWorld(entities); break;
-		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 4; //canviar enum sense bullet (enum = 4)
+		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 6; //canviar enum sense bullet (enum = 6)
 			
 
 	}
@@ -332,6 +338,15 @@ void Game::loadTexturesAndMeshes() {
 
 	texture_sky = Texture::Get("data/sky/sky.tga");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");
+
+	mesh_zona0 = Mesh::Get("data/zona_0.obj");
+	texture_zona0 = Texture::Get("data/zona_0.png");
+
+	mesh_zona1 = Mesh::Get("data/zona_1.obj");
+	texture_zona1 = Texture::Get("data/zona_1.png");
+	
+	mesh_bullet = Mesh::Get("data/bullet.obj");
+	texture_bullet = Texture::Get("data/bullet.png");
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();

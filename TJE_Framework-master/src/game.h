@@ -57,6 +57,12 @@ public:
 	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
 	Mesh* mesh_ring = NULL;
+	Mesh* mesh_zona0 = NULL;
+	Mesh* mesh_zona1 = NULL;
+	Mesh* mesh_bullet = NULL;
+	Texture* texture_bullet = NULL;
+	Texture* texture_zona0 = NULL;
+	Texture* texture_zona1 = NULL;
 	Texture* texture_sky = NULL;
 	Texture* texture_ring = NULL;
 	Texture* texture_wall = NULL;
@@ -66,6 +72,7 @@ public:
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
 	Matrix44 playerModel;
+	Vector3 character_center;
 	
 	
     

@@ -109,6 +109,14 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
         mesh = g->mesh_ring;
         texture = g->texture_ring;
     }
+    else if (id == Entity::ENTITY_ID::ZONA0) {
+        mesh = g->mesh_zona0;
+        texture = g->texture_zona0;
+    }
+    else if (id == Entity::ENTITY_ID::ZONA1) {
+        mesh = g->mesh_zona1;
+        texture = g->texture_zona1;
+    }
 }
 
 std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities) {

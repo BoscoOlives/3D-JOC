@@ -22,7 +22,9 @@ public:
 		WALL = 1,
 		ENEMY = 2,
 		RING = 3,
-		BULLET = 4
+		ZONA0 = 4,
+		ZONA1 = 5,
+		BULLET = 6
 	};
 
 	ENTITY_ID current_entity;
