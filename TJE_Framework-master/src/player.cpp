@@ -23,6 +23,13 @@ Player::Player() {
     gunUp = true;
 }
 
+Matrix44 Player::getModel() {
+    Matrix44 model;
+    model.translate(pos.x, pos.y, pos.z);
+    model.rotate(yaw * DEG2RAD, Vector3(0, 1, 0));
+    return model;
+}
+
 std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
@@ -68,4 +75,29 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
     }
     
     return gun;
+}
+
+
+void Player::AIEnemy(float elpased_time) {
+    float facingDistance = 10.0f;
+    Game* g = Game::instance;
+    Matrix44 model = this->getModel();    
+    Vector3 side = model.rotateVector(Vector3(1, 0, 0)).normalize();
+    Vector3 forward = model.rotateVector(Vector3(0, 0, -1)).normalize();
+
+    Vector3 toTarget = g->player->pos - this->pos;
+    float dist = toTarget.length();
+    toTarget.normalize();
+
+    float sideDot = side.dot(toTarget);
+    float forwardDot = forward.dot(toTarget);
+    if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
+        if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
+            yaw += 90.0f * g->world.sign(sideDot) * elpased_time;
+        }
+        if (dist > 4.0f) { //que no s'atraqui més de 4 unitats 
+            this->pos = this->pos + (forward * 10.0f * elpased_time);
+        }
+    }
+
 }

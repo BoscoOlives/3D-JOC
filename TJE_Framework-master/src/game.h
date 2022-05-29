@@ -40,10 +40,12 @@ public:
 
 	//Variables	BOSCO &	RICCI
 	std::vector<Entity*> entities;
+	std::vector<Entity*> enemies;
 	std::vector<Vector3> points;
     Entity* selectedEntity = NULL;
 	World world;
 	Player* player = &world.player;
+	std::vector<Player*> player_enemies;
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
 	bool slowMotion;
@@ -56,10 +58,14 @@ public:
 	Mesh* mesh_wall = NULL;
 	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
+	Mesh* mesh_pistol_e = NULL;
 	Mesh* mesh_ring = NULL;
 	Mesh* mesh_zona0 = NULL;
 	Mesh* mesh_zona1 = NULL;
 	Mesh* mesh_bullet = NULL;
+	Mesh* mesh_cowboy_walk = NULL;
+	Mesh* mesh_cowboy_run = NULL;
+	Texture* texture_cowboy = NULL;
 	Texture* texture_bullet = NULL;
 	Texture* texture_zona0 = NULL;
 	Texture* texture_zona1 = NULL;
@@ -69,11 +75,13 @@ public:
 	Mesh* mesh_ground = NULL;
 	Texture* texture_ground = NULL;
 	Shader* shader = NULL;
+	Shader* anim_shader = NULL;
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
 	Matrix44 playerModel;
 	Vector3 character_center;
-	
+	Animation* anim_walk;
+	Animation* anim_run;
 	
     
 

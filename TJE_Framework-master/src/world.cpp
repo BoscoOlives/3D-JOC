@@ -102,8 +102,8 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
         texture = g->texture_wall;
     }
     else if (id == Entity::ENTITY_ID::ENEMY) {
-        mesh = g->mesh_man;
-        texture = g->texture_black;
+        mesh = g->mesh_cowboy_run;
+        texture = g->texture_cowboy;
     }
     else if (id == Entity::ENTITY_ID::RING) {
         mesh = g->mesh_ring;
@@ -132,9 +132,17 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
     Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
     Matrix44 model;
     model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
+    if (entityToAdd == 6){
+        model.scale(0.01, 0.01, 0.01);
+        Player* player = new Player();
+        player->pos = spawnPos;
+        g->player_enemies.push_back(player);
+        
+    }
 
     Entity* entity = new Entity(model, mesh, texture);
     entity->current_entity = (Entity::ENTITY_ID)entityToAdd;
+
     entities.push_back(entity);
     return entities;
 }
@@ -196,7 +204,7 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
      
 }
 
-std::vector<Entity*> World::shooting_update(std::vector<Entity*> entities) {
+void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
     for (size_t i = 0; i < entities.size(); i++)
@@ -212,22 +220,69 @@ std::vector<Entity*> World::shooting_update(std::vector<Entity*> entities) {
             {
                 Entity* currentEntity = entities[j]; //cercam enemics
 
-                if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
+                if (currentEntity->current_entity != Entity::ENTITY_ID::BULLET) {
                     Vector3 coll;
                     Vector3 collnorm;
-                    //comprobamos si colisiona el objeto con la esfera
+                    //comprovam si colisiona  la entitat amb la bala
                     if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
-                        entities.erase(entities.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
+                        printf("COLISION BULLET WITH ENTITIE\n");
+                        entities.erase(entities.begin() + i);//si la bala col·lisiona, elimina la bala
+                        break;
+                    }
+                }
+            }
+            for (size_t j = 0; j < enemies.size(); j++)
+            {
+                Entity* currentEnemy = enemies[j]; //cercam enemics
+
+                if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
+                    Vector3 coll;
+                    Vector3 collnorm;
+                    //comprovam si colisiona el enemic amb la bala
+                    if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 3.0, coll, collnorm)) {
+                        printf("COLISION BULLET WITH ENEMY\n");
+                        enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
+                        g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
+                        entities.erase(entities.begin() + i);//si la bala col·lisiona, elimina la bala
                         break;
                     }
                 }
             }
         }
     }
-    return entities;
 }
 
 Vector3 World::Lerp(Vector3 a, Vector3 b, float t) {
     Vector3 ab = b - a;
     return a + (ab * t);
 }
+
+void World::creteGrid() {
+    //pathfinding
+    map_grid = new uint8[W*H];
+    for (size_t i = 0; i < W*H; i++) {
+        map_grid[i] = 1;
+    }
+}
+void World::renderPath() {
+    Game* g = Game::instance;
+    //pathfinding
+    if (path_steps > 0) {
+        Mesh m;
+        for (size_t i = 0; i < path_steps; i++) {
+            int index = output[i];
+            int x = index % W;
+            int y = index / W;
+            Vector3 pos;
+            pos.x = x * tileSizeX;
+            pos.z = y * tileSizeY;
+            m.vertices.push_back(pos);
+        }
+        Entity pathfinding = Entity(Matrix44(), &m, g->texture_black);
+        pathfinding.RenderEntity(GL_LINE_STRIP, g->shader, g->camera, g->cameraLocked);
+    }
+}
+float World::sign(float value) {
+    return value >= 0.0f ? 1.0f : -1.0f;
+}
+

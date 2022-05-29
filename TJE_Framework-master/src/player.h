@@ -27,8 +27,10 @@ public:
     bool gunUp;
 
     Player();
+    Matrix44 getModel();
     std::vector<Entity*> Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities);
     Matrix44 Coil(float elapsed_time, Matrix44 gun);
+    void AIEnemy(float elpased_time);
 };
 
 

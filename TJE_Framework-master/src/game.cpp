@@ -49,8 +49,11 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	loadTexturesAndMeshes();
 
 	// example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");	
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	anim_shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
 
+	//pathfinding
+	world.creteGrid();
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
@@ -122,16 +125,20 @@ void Game::render(void)
 	}
     //CREAR JUGADOR
 	Entity player_entity = Entity(playerModel, mesh_pistol, texture_black);
-
+	//render Player
 	player_entity.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
     
-    
-	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen, ARA MATEIX NOMES CREEM ELS CARROS AMB LA TECLA 2
+    //render de totes les entitats (estatiques)
+	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen
 		Entity* entity = entities[i];
 		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
-		//RenderMesh(entity->model, entity->mesh, entity->texture, shader, camera);
 	}
-
+	//render de tots els enemics
+	for (size_t i = 0; i < enemies.size(); i++) { //Renderitza tots els enemics que es creen
+		Entity* entity = enemies[i];
+		Player* enemy = player_enemies[i];
+		entity->RenderEntityAnim(GL_TRIANGLES, anim_shader, camera, enemy->pos, enemy->yaw);
+	}
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
 		std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n + Change Entity to Add\n";
@@ -142,6 +149,8 @@ void Game::render(void)
 		drawText(this->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
 	}
 
+	//Pathfinding
+	//world.renderPath();
 
 
 	//Draw the floor grid
@@ -178,8 +187,8 @@ void Game::update(double seconds_elapsed)
     
 	SDL_ShowCursor(!cameraLocked);
 	if (cameraLocked) { //moviment player
-		float playerSpeed = 5.0f * elapsed_time;
-		float rotSpeed = 150.0f * elapsed_time;
+		float playerSpeed = 3.0f * elapsed_time;
+		float rotSpeed = 120.0f * elapsed_time;
         
         //if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
         //if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
@@ -248,9 +257,15 @@ void Game::update(double seconds_elapsed)
 		entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
 		player->shoot = true;
 	}
-	//update bala de la posicio i si colisiona amb enemics
-	entities = world.shooting_update(entities);
-    
+	//update bala de la posicio i si colisiona amb enemics o parets
+	world.shooting_update(entities, enemies);
+
+	//AI ENEMIES 
+	for (size_t i = 0; i < player_enemies.size(); i++){
+		Player* enemy = player_enemies[i];
+		enemy->AIEnemy(seconds_elapsed);
+	}
+	
 	//to navigate with the mouse fixed in the middle
 	if (mouse_locked)
 		Input::centerMouse();
@@ -263,6 +278,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 	{
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break;
+		case SDLK_1: enemies = world.AddEntityInFront(camera, 6, enemies); break;
         case SDLK_2: entities = world.AddEntityInFront(camera, entityToAdd, entities); break;
         case SDLK_3: selectedEntity = world.RayPick(camera, points, entities, selectedEntity);
             if (selectedEntity == NULL) printf("selected entity not saved!\n"); 
@@ -271,8 +287,56 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
         case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
 		case SDLK_6:  entities = world.DeleteEntity(camera, points, entities); break;
 		case SDLK_0: world.saveWorld(entities); break;
+			//path finding
+		case SDLK_7: {
+			Vector2 mouse = Input::mouse_position;
+			Game* g = Game::instance;
+			Vector3 dir = camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
+			Vector3 rayOrigin = camera->eye;
+
+			Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+			world.start_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
+			world.start_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
+			//printf("(start_x, start_y) = (%d, %d)\n", start_x, start_y);
+			break;
+		}
+		case SDLK_8: {
+			Vector2 mouse = Input::mouse_position;
+			Game* g = Game::instance;
+			Vector3 dir = camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
+			Vector3 rayOrigin = camera->eye;
+
+			Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+			world.target_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
+			world.target_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
+
+			//printf("(target_x, target_y) = (%d, %d)\n", target_x, target_y);
+
+
+			world.path_steps = AStarFindPathNoTieDiag(
+				world.start_x, world.start_y, //origin (tienen que ser enteros)
+				world.target_x, world.target_y, //target (tienen que ser enteros)
+				world.map_grid, //pointer to map data
+				world.W, world.H, //map width and height
+				world.output, //pointer where the final path will be stored
+				100); //max supported steps of the final path
+
+
+		//check if there was a path
+			if (world.path_steps != -1)
+			{
+				for (int i = 0; i < world.path_steps; ++i)
+					std::cout << "X: " << (world.output[i] % world.W) << ", Y: " << floor(world.output[i] / world.W) << std::endl;
+			}
+			else {
+				printf("No paths.\n");
+			}
+
+
+			break;
+		}
 		case SDLK_9: entities = world.loadWorld(entities); break;
-		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 6; //canviar enum sense bullet (enum = 6)
+		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 5; //canviar enum sense bullet (enum = 5) i el 6 es el enemic
 			
 
 	}
@@ -332,6 +396,7 @@ void Game::loadTexturesAndMeshes() {
 	mesh_man = Mesh::Get("data/man.obj");
 	
 	mesh_pistol = Mesh::Get("data/pistol.obj");
+	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
 	
 	mesh_ring = Mesh::Get("data/tanca.obj");
 	texture_ring = Texture::Get("data/tancarParets.png");
@@ -347,6 +412,14 @@ void Game::loadTexturesAndMeshes() {
 	
 	mesh_bullet = Mesh::Get("data/bullet.obj");
 	texture_bullet = Texture::Get("data/bullet.png");
+
+	//imports d'arxius d'animació
+	mesh_cowboy_run = Mesh::Get("data/animation/cowboy_run.mesh");
+	mesh_cowboy_walk = Mesh::Get("data/animation/cowboy_walk.mesh");
+	texture_cowboy = Texture::Get("data/animation/westernpack.png");
+	anim_run = Animation::Get("data/animation/cowboy_run.skanim");
+	anim_walk = Animation::Get("data/animation/cowboy_walk.skanim");
+
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();

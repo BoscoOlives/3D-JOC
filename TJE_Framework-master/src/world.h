@@ -17,6 +17,7 @@
 #include "mesh.h"
 #include "texture.h"
 #include "input.h"
+#include "pathfinders.h"
 
 class World {
 public:
@@ -25,6 +26,19 @@ public:
     std::vector<Player*> enemies;
     std::vector<Entity*> entities;
     //buildings, stages, scores...
+
+    //pathfinding
+    int start_x;
+    int start_y;
+    int target_x;
+    int target_y;
+    uint8* map_grid;
+    int output[100];
+    int W = 100;
+    int H = 100;
+    float tileSizeX = 1.0f;
+    float tileSizeY = 1.0f;
+    int path_steps;
 
     World();
 
@@ -36,8 +50,11 @@ public:
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
-    std::vector<Entity*> shooting_update(std::vector<Entity*> entities);
+    void shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies);
     Vector3 Lerp(Vector3 a, Vector3 b, float t);
+    void creteGrid();
+    void renderPath();
+    float sign(float value);
 };
 
 #endif /* world_h */

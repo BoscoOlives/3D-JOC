@@ -9,7 +9,6 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 	this->model = model;
 	this->mesh= mesh;
 	this->texture = texture;
-	
 
 }
 
@@ -20,7 +19,7 @@ void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cam
 
 	float time = Game::instance->time;
 	//enable shader
-	
+		
 	a_shader->enable();
 
 	//upload uniforms
@@ -50,5 +49,60 @@ void Entity::update_position_moving(float elapsed_time, float vel) {
 
     this->model.setTranslation(pos.x, pos.y, pos.z);
 	this->model.rotate(Game::instance->player->yaw * DEG2RAD, Vector3(0, 1, 0));
-	//this->model.scale(0.01, 0.01, 0.01);
 }
+
+void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw) {
+	assert((mesh != NULL, "mesh in renderMesh was null"));
+	if (!a_shader) return;
+
+	Game* g = Game::instance;
+	float time = g->time;
+	Animation* walk = g->anim_walk;
+	Animation* run = g->anim_run;
+
+	float t = fmod(time, walk->duration) / walk->duration;
+	walk->assignTime(t * walk->duration);
+	run->assignTime(t * run->duration);
+
+	Skeleton resultSk;
+
+	float velFactor = 0.0f; //aqui hem de binaritzar la animació, entre caminar i correr, que depengui de si ens ha trobat o no? per exemple
+	if (velFactor > 1.0f) {
+		blendSkeleton(&walk->skeleton, &run->skeleton, 0.0f, &resultSk);
+	}
+	else{
+		blendSkeleton(&walk->skeleton, &run->skeleton, 1.0f, &resultSk);
+	}
+
+	//actualitzem la model amb els valors del player de POS i YAW
+	model.setTranslation(pos.x, pos.y, pos.z);
+	model.rotate(yaw * DEG2RAD, Vector3(0, 1, 0));
+	model.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
+
+	model.scale(0.01, 0.01, 0.01); //els enemics tenen un escala gigant i s'ha de reescalar cada cop
+
+	//enable shader upload uniforms
+	a_shader->enable();
+	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
+	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
+	if (texture != NULL) {
+		a_shader->setUniform("u_texture", texture, 0);
+	}
+	a_shader->setUniform("u_time", time);
+	a_shader->setUniform("u_tex_tiling", 1.0f);
+	a_shader->setUniform("u_model", model);
+	mesh->renderAnimated(primitive, &resultSk);
+
+	a_shader->disable();
+
+	//Render de l'arma
+	{
+		Matrix44 neckLocalMatrix = resultSk.getBoneMatrix("mixamorig_RightHand", false);
+
+		Matrix44 localToWorldMatrix = neckLocalMatrix * model;
+
+		Entity* pistol_entity = new Entity(localToWorldMatrix, g->mesh_pistol_e, g->texture_black);
+		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, g->cameraLocked);
+	}
+}
+
