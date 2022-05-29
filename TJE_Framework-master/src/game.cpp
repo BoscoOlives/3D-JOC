@@ -95,6 +95,18 @@ void Game::render(void)
 	ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
 	//-----------------------------------------------------------------
 
+	//-------------------RENDER DEL PUNT DE COLISIO ENEMICS!-------------------
+	for (size_t i = 0; i < player_enemies.size(); i++)
+	{
+		Vector3 pos = player_enemies[i]->pos;
+		Matrix44 model_colision;
+		model_colision.setTranslation(pos.x, pos.y, pos.z);
+
+		Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
+		ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+	}
+	//-----------------------------------------------------------------
+
     //playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
 	playerModel.setTranslation(player->pos.x, player->pos.y, player->pos.z);
 	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));

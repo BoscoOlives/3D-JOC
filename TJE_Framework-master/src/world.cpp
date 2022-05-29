@@ -239,7 +239,7 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                     Vector3 coll;
                     Vector3 collnorm;
                     //comprovam si colisiona el enemic amb la bala
-                    if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 3.0, coll, collnorm)) {
+                    if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 3.0, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
                         printf("COLISION BULLET WITH ENEMY\n");
                         enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                         g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
