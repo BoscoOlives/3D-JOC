@@ -46,7 +46,7 @@ public:
     std::vector<Entity*> loadWorld(std::vector<Entity*> entities);
 
     std::vector<Entity*> AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities);
-    Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity);
+    Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity, float max_ray_dist = 1e+10F);
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);

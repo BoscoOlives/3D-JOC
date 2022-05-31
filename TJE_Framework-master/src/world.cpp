@@ -147,7 +147,7 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
     return entities;
 }
 
-Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity) {
+Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity, float max_ray_dist) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
@@ -158,7 +158,8 @@ Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Ent
         Entity* entity = entities[i];
         Vector3 pos;
         Vector3 normal;
-        if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
+        //testRayCollision(Matrix44 model, Vector3 start, Vector3 front, Vector3& collision, Vector3& normal, float max_ray_dist, bool in_object_space )
+        if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal, max_ray_dist)) {
             //std::cout << "Selected" << std::endl;
             //points.push_back(pos);
             selectedEntity = entity;
@@ -238,8 +239,12 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                 if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
                     Vector3 coll;
                     Vector3 collnorm;
+                    //currentEnemy->mesh->testSphereCollision(<#Matrix44 model#>, <#Vector3 center#>, <#float radius#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
                     //comprovam si colisiona el enemic amb la bala
-                    if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 3.0, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
+                    //if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 3.0, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
+                    Vector3 pos; Vector3 normal;
+                    //currentEnemy->mesh->testRayCollision(<#Matrix44 model#>, <#Vector3 ray_origin#>, <#Vector3 ray_direction#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
+                    if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 10)) {
                         printf("COLISION BULLET WITH ENEMY\n");
                         enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                         g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic

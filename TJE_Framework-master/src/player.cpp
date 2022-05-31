@@ -19,7 +19,7 @@ Player::Player() {
     this->pitch = 0.0f;
     this->yaw = 0.0f;
     gunAngle = 0.0f;
-    shoot = false;
+    shot = false;
     gunUp = true;
 }
 
@@ -30,7 +30,7 @@ Matrix44 Player::getModel() {
     return model;
 }
 
-std::vector<Entity*> Player::Shot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
+std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
@@ -71,7 +71,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
     if(gunAngle <= 0.0f){
         gunAngle = 0.0f;
         this->gunUp = true;
-        this->shoot = false;
+        this->shot = false;
     }
     
     return gun;

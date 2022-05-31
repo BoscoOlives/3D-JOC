@@ -132,7 +132,7 @@ void Game::render(void)
 		camera->lookAt(eye, center, up);
 	}
 	
-	if (player->shoot) { //moviment que provoca un shot a la arma
+	if (player->shot) { //moviment que provoca un shot a la arma
 		playerModel = player->Coil(elapsed_time, playerModel);
 	}
     //CREAR JUGADOR
@@ -240,7 +240,7 @@ void Game::update(double seconds_elapsed)
 			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm))
 				continue; //si no colisiona, pasamos al siguiente objeto
 
-			//si la esfera está colisionando muevela a su posicion anterior alejandola del objeto
+			//si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
 			Vector3 push_away = normalize(coll - character_center) * elapsed_time;
 			nexPos = player->pos - push_away; //move to previous pos but a little bit further
 
@@ -265,9 +265,9 @@ void Game::update(double seconds_elapsed)
 
 	}
 	//Generem una bala / bullet
-	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shoot) { //solament pot disparar quan ha acabat la animació de disparar
-		entities = player->Shot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
-		player->shoot = true;
+	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shot) { //solament pot disparar quan ha acabat la animaci— de disparar
+		entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
+		player->shot = true;
 	}
 	//update bala de la posicio i si colisiona amb enemics o parets
 	world.shooting_update(entities, enemies);
