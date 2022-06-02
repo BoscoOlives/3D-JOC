@@ -79,7 +79,7 @@ public:
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
 	Matrix44 playerModel;
-	Vector3 character_center;
+	//Vector3 character_center;
 	Animation* anim_walk;
 	Animation* anim_run;
 	

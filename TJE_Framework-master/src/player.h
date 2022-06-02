@@ -25,12 +25,14 @@ public:
     float gunAngle;
     bool shot;
     bool gunUp;
+    Vector3 character_center;
 
     Player();
     Matrix44 getModel();
     std::vector<Entity*> Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities);
     Matrix44 Coil(float elapsed_time, Matrix44 gun);
-    void AIEnemy(float elpased_time);
+    void AIEnemy(float seconds_elapsed, float elapsed_time);
+    void checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time);
 };
 
 

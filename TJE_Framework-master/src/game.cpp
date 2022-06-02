@@ -98,9 +98,10 @@ void Game::render(void)
 	//-------------------RENDER DEL PUNT DE COLISIO ENEMICS!-------------------
 	for (size_t i = 0; i < player_enemies.size(); i++)
 	{
-		Vector3 pos = player_enemies[i]->pos;
+		Vector3 pos = player_enemies[i]->character_center;
 		Matrix44 model_colision;
 		model_colision.setTranslation(pos.x, pos.y, pos.z);
+		model_colision.scale(10.0f, 10.0f, 10.0f);
 
 		Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
 		ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
@@ -226,31 +227,8 @@ void Game::update(double seconds_elapsed)
 			elapsed_time *= 0.01f;
 		}
 
-		Vector3 nexPos = player->pos + playerVel;
-		//calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
-		character_center = nexPos + Vector3(0, 0.5, 0);
-
-		for (size_t i = 0; i < entities.size(); i++)
-		{
-			Entity* currentEntity = entities[i];
-
-			Vector3 coll;
-			Vector3 collnorm;
-			//comprobamos si colisiona el objeto con la esfera (radio 3)
-			if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm))
-				continue; //si no colisiona, pasamos al siguiente objeto
-
-			//si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
-			Vector3 push_away = normalize(coll - character_center) * elapsed_time;
-			nexPos = player->pos - push_away; //move to previous pos but a little bit further
-
-			//cuidado con la Y, si nuestro juego es 2D la ponemos a 0
-			nexPos.y = 0;
-
-			//reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
-			//velocity = reflect(velocity, collnorm) * 0.95;
-		}
-        player->pos = nexPos;
+		//Colisions dels Players (player + enemcis)
+		player->checkColisions(playerVel, entities, elapsed_time);
 
 	}
 	else {
@@ -272,10 +250,10 @@ void Game::update(double seconds_elapsed)
 	//update bala de la posicio i si colisiona amb enemics o parets
 	world.shooting_update(entities, enemies);
 
-	//AI ENEMIES 
+	//AI ENEMIES - Canvi de posicio dels enemics  + comprovar colisions enemics
 	for (size_t i = 0; i < player_enemies.size(); i++){
 		Player* enemy = player_enemies[i];
-		enemy->AIEnemy(seconds_elapsed);
+		enemy->AIEnemy(seconds_elapsed, elapsed_time);
 	}
 	
 	//to navigate with the mouse fixed in the middle

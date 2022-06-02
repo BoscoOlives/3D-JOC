@@ -78,7 +78,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 }
 
 
-void Player::AIEnemy(float elpased_time) {
+void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
     float facingDistance = 10.0f;
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
@@ -93,11 +93,40 @@ void Player::AIEnemy(float elpased_time) {
     float forwardDot = forward.dot(toTarget);
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
-            yaw += 90.0f * g->world.sign(sideDot) * elpased_time;
+            yaw += 90.0f * g->world.sign(sideDot) * seconds_elapsed;
         }
         if (dist > 4.0f) { //que no s'atraqui més de 4 unitats 
-            this->pos = this->pos + (forward * 10.0f * elpased_time);
+            Vector3 playerVel = forward * 10.0f * seconds_elapsed;
+            this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
         }
     }
 
 }
+void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time) {
+    Vector3 nexPos = pos + playerVel;
+    //calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
+    character_center = nexPos + Vector3(0, 0.5, 0);
+
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        Entity* currentEntity = entities[i];
+
+        Vector3 coll;
+        Vector3 collnorm;
+        //comprobamos si colisiona el objeto con la esfera (radio 3)
+        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm))
+            continue; //si no colisiona, pasamos al siguiente objeto
+
+        //si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
+        Vector3 push_away = normalize(coll - character_center) * elpased_time;
+        nexPos = pos - push_away; //move to previous pos but a little bit further
+
+        //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
+        nexPos.y = 0;
+
+        //reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
+        //playerVel = reflect(playerVel, collnorm) * 0.95;
+    }
+    pos = nexPos;
+}
+
