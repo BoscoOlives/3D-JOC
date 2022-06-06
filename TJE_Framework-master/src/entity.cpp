@@ -51,7 +51,7 @@ void Entity::update_position_moving(float elapsed_time, float vel) {
 	this->model.rotate(Game::instance->player->yaw * DEG2RAD, Vector3(0, 1, 0));
 }
 
-void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw) {
+void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look) {
 	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
@@ -66,12 +66,11 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 
 	Skeleton resultSk;
 
-	float velFactor = 0.0f; //aqui hem de binaritzar la animació, entre caminar i correr, que depengui de si ens ha trobat o no? per exemple
-	if (velFactor > 1.0f) {
-		blendSkeleton(&walk->skeleton, &run->skeleton, 0.0f, &resultSk);
+	if (look) {
+		blendSkeleton(&walk->skeleton, &run->skeleton, 1.0f, &resultSk);
 	}
 	else{
-		blendSkeleton(&walk->skeleton, &run->skeleton, 1.0f, &resultSk);
+		blendSkeleton(&walk->skeleton, &run->skeleton, 0.0f, &resultSk);
 	}
 
 	//actualitzem la model amb els valors del player de POS i YAW
@@ -96,10 +95,14 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 	a_shader->disable();
 
 	//Render de l'arma
+	if(look)
 	{
 		Matrix44 neckLocalMatrix = resultSk.getBoneMatrix("mixamorig_RightHand", false);
+		neckLocalMatrix.rotate(90.0f * DEG2RAD, Vector3(0.0, -1.0, 1.0));
 
 		Matrix44 localToWorldMatrix = neckLocalMatrix * model;
+
+		localToWorldMatrix.translate(-13.0f, 9.0f, 6.0f); //es una tirita, no mola fer-ho així
 
 		Entity* pistol_entity = new Entity(localToWorldMatrix, g->mesh_pistol_e, g->texture_black);
 		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, g->cameraLocked);

@@ -96,7 +96,7 @@ void Game::render(void)
 	//-----------------------------------------------------------------
 
 	//-------------------RENDER DEL PUNT DE COLISIO ENEMICS!-------------------
-	for (size_t i = 0; i < player_enemies.size(); i++)
+	/*for (size_t i = 0; i < player_enemies.size(); i++)
 	{
 		Vector3 pos = player_enemies[i]->character_center;
 		Matrix44 model_colision;
@@ -105,7 +105,7 @@ void Game::render(void)
 
 		Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
 		ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
-	}
+	}*/
 	//-----------------------------------------------------------------
 
     //playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
@@ -150,7 +150,7 @@ void Game::render(void)
 	for (size_t i = 0; i < enemies.size(); i++) { //Renderitza tots els enemics que es creen
 		Entity* entity = enemies[i];
 		Player* enemy = player_enemies[i];
-		entity->RenderEntityAnim(GL_TRIANGLES, anim_shader, camera, enemy->pos, enemy->yaw);
+		entity->RenderEntityAnim(GL_TRIANGLES, anim_shader, camera, enemy->pos, enemy->yaw, enemy->look);
 	}
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ

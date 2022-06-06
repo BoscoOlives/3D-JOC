@@ -26,6 +26,7 @@ public:
     bool shot;
     bool gunUp;
     Vector3 character_center;
+    bool look;
 
     Player();
     Matrix44 getModel();

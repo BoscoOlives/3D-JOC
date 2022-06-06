@@ -34,7 +34,7 @@ public:
 
 	Entity(Matrix44 model, Mesh* mesh, Texture* texture);
 	void RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cameraLocked, float tiling = 1.0f);
-	void RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw);
+	void RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look);
 	void update_position_moving(float elapsed_time, float vel);
 	
 };
