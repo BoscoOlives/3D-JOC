@@ -16,6 +16,7 @@
 #include "texture.h"
 #include "fbo.h"
 #include "shader.h"
+#include <bass.h>
 
 class Game
 {
@@ -82,6 +83,7 @@ public:
 	//Vector3 character_center;
 	Animation* anim_walk;
 	Animation* anim_run;
+	HSAMPLE shoot;
 	
     
 
@@ -103,7 +105,8 @@ public:
 
 	//funcions BOSCO & RICCI
 	void loadTexturesAndMeshes();
-
+	HSAMPLE LoadSample(const char* fileName);
+	void PlayGameSound(HSAMPLE fileSample);
 };
 
 

@@ -22,6 +22,7 @@ Player::Player() {
     shot = false;
     gunUp = true;
     look = false;
+    colliding = false;
 }
 
 Matrix44 Player::getModel() {
@@ -31,7 +32,7 @@ Matrix44 Player::getModel() {
     return model;
 }
 
-std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities) {
+std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
@@ -41,10 +42,9 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     //model.scale(0.01, 0.01, 0.01);
     Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
-    Vector3 position = this->pos + Vector3(0.0f, 0.5f, 0.0f); //inicialitzem la posicio de la bala devant del PLAYER
-
-    model.setTranslation(position.x, position.y, position.z);
-
+    float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER
+    
+    model.setTranslation(playerModel.getTranslation().x, positionY, playerModel.getTranslation().z);
     model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
 
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
@@ -52,6 +52,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     entity_bullet->dir = dir;
 
     entities.push_back(entity_bullet);
+    g->PlayGameSound(g->shoot);
     return entities;
 }
 
@@ -95,10 +96,14 @@ void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
             yaw += 90.0f * g->world.sign(sideDot) * seconds_elapsed;
+            
         }
-        else if (dist > 4.0f) { //que no s'atraqui més de 4 unitats 
+        else if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
             Vector3 playerVel = forward * 5.0f * seconds_elapsed;
             this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
+            /*if (colliding) {
+                yaw += 45.0f;
+            }*/
         }
         look = true;
     }
@@ -109,7 +114,7 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
     Vector3 nexPos = pos + playerVel;
     //calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
     character_center = nexPos + Vector3(0, 0.5, 0);
-
+    
     for (size_t i = 0; i < entities.size(); i++)
     {
         Entity* currentEntity = entities[i];
@@ -117,19 +122,21 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         Vector3 coll;
         Vector3 collnorm;
         //comprobamos si colisiona el objeto con la esfera
-        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm))
+        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm)) {
+            colliding = true;
             continue; //si no colisiona, pasamos al siguiente objeto
-
+        }
         //si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
         Vector3 push_away = normalize(coll - character_center) * elpased_time;
         nexPos = pos - push_away; //move to previous pos but a little bit further
-
+        //yaw = yaw + 10.0f;
         //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
         nexPos.y = 0;
-
+        colliding = false;
         //reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
         //playerVel = reflect(playerVel, collnorm) * 0.95;
     }
     pos = nexPos;
+    
 }
 

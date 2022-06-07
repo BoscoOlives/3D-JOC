@@ -2,11 +2,6 @@
 #include "utils.h"
 #include "input.h"
 
-
-
-
-
-
 #include <cmath>
 
 //#define EDITOR
@@ -51,7 +46,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	// example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	anim_shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
-
+	
+	//inicialitzar part d'audio
+	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
+	{
+		std::cout << "ERROR initializing audio" << std::endl;
+	}
+	shoot = LoadSample("data/audios/paintball.wav");
 	//pathfinding
 	world.creteGrid();
 	//hide the cursor
@@ -132,7 +133,7 @@ void Game::render(void)
 		
 		camera->lookAt(eye, center, up);
 	}
-	
+	playerModel.translate(0.1, 0, 0);
 	if (player->shot) { //moviment que provoca un shot a la arma
 		playerModel = player->Coil(elapsed_time, playerModel);
 	}
@@ -160,6 +161,7 @@ void Game::render(void)
 	if (cameraLocked) {//TEXT TECLES MODE GAMEPLAY
 		std::string text_gameplay = "SPACE Shot\nWASD Move Player\nMouse Move Camera\n";
 		drawText(this->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
+		drawText(this->window_width/2, this->window_height / 2, "+", Vector3(1, 1, 1), 2);
 	}
 
 	//Pathfinding
@@ -242,11 +244,11 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
-	//Generem una bala / bullet
-	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shot) { //solament pot disparar quan ha acabat la animaci— de disparar
-		entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities);
-		player->shot = true;
-	}
+	////Generem una bala / bullet
+	//if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shot) { //solament pot disparar quan ha acabat la animaci— de disparar
+	//	entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities, playerModel);
+	//	player->shot = true;
+	//}
 	//update bala de la posicio i si colisiona amb enemics o parets
 	world.shooting_update(entities, enemies);
 
@@ -353,6 +355,11 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 		mouse_locked = !mouse_locked;
 		SDL_ShowCursor(!mouse_locked);
 	}
+	if (event.button == SDL_BUTTON_LEFT && !player->shot) //solament pot disparar quan ha acabat la animaci— de disparar
+	{
+		entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities, playerModel);
+		player->shot = true;
+	}
 }
 
 void Game::onMouseButtonUp(SDL_MouseButtonEvent event)
@@ -413,4 +420,33 @@ void Game::loadTexturesAndMeshes() {
 
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
+}
+
+
+HSAMPLE Game::LoadSample(const char* fileName) {
+	//El handler para un sample
+	HSAMPLE hSample;
+
+	//Cargamos un sample del disco duro (memoria, filename, offset, length, max, flags)
+	//use BASS_SAMPLE_LOOP in the last param to have a looped sound
+	hSample = BASS_SampleLoad(false, fileName, 0, 0, 3, 0);
+	if (hSample == 0)
+	{
+		std::cout << "ERROR load" << fileName << std::endl;
+	}
+	std::cout << " + AUDIO load" << fileName << std::endl;
+	return hSample;
+}
+void Game::PlayGameSound(HSAMPLE fileSample) {
+	
+
+	//El handler para un canal
+	HCHANNEL hSampleChannel;
+
+	//Creamos un canal para el sample
+	hSampleChannel = BASS_SampleGetChannel(fileSample, false);
+
+
+	//Lanzamos un sample
+	BASS_ChannelPlay(hSampleChannel, true);
 }
