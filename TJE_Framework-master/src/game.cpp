@@ -373,7 +373,7 @@ void Game::onResize(int width, int height)
 void Game::loadTexturesAndMeshes() {
 	mesh_ground = new Mesh();
 	mesh_ground->createPlane(80);
-	texture_ground = Texture::Get("data/ground-mosaic.tga");
+	texture_ground = Texture::Get("data/ground-mosaic.png");
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
 
