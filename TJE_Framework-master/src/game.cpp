@@ -85,8 +85,8 @@ void Game::render(void)
     glDisable(GL_DEPTH_TEST); //desactivem el DEPTH TEST abans de redenritzar el fons perque no es superposi devant entitats
     background.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
     glEnable(GL_DEPTH_TEST);
-    
-    Entity ground = Entity(Matrix44(), mesh_ground, texture_ground);
+	Matrix44 groundModel;
+    Entity ground = Entity(groundModel, mesh_ground, texture_ground);
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	
 	//-------------------RENDER DEL PUNT DE COLISIO!-------------------
@@ -167,7 +167,6 @@ void Game::render(void)
 	//Pathfinding
 	//world.renderPath();
 
-
 	//Draw the floor grid
 	drawGrid();
 
@@ -196,7 +195,6 @@ void Game::update(double seconds_elapsed)
 	}
 
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
-		
 		cameraLocked = !cameraLocked;
 	}
     
@@ -204,9 +202,6 @@ void Game::update(double seconds_elapsed)
 	if (cameraLocked) { //moviment player
 		float playerSpeed = 3.0f * elapsed_time;
 		float rotSpeed = 120.0f * elapsed_time;
-        
-        //if (Input::isKeyPressed(SDL_SCANCODE_D)) player->yaw = player->yaw + rotSpeed;
-        //if (Input::isKeyPressed(SDL_SCANCODE_A)) player->yaw = player->yaw - rotSpeed;
 		
 		Input::centerMouse();
 		player->pitch += -Input::mouse_delta.y * 10.0f * elapsed_time;
@@ -244,11 +239,6 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 
 	}
-	////Generem una bala / bullet
-	//if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && !player->shot) { //solament pot disparar quan ha acabat la animaci— de disparar
-	//	entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities, playerModel);
-	//	player->shot = true;
-	//}
 	//update bala de la posicio i si colisiona amb enemics o parets
 	world.shooting_update(entities, enemies);
 
@@ -382,8 +372,8 @@ void Game::onResize(int width, int height)
 
 void Game::loadTexturesAndMeshes() {
 	mesh_ground = new Mesh();
-	mesh_ground->createPlane(1000);
-	texture_ground = Texture::Get("data/ground.tga");
+	mesh_ground->createPlane(80);
+	texture_ground = Texture::Get("data/ground-mosaic.tga");
 
 	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
 
@@ -446,7 +436,10 @@ void Game::PlayGameSound(HSAMPLE fileSample) {
 	//Creamos un canal para el sample
 	hSampleChannel = BASS_SampleGetChannel(fileSample, false);
 
-
 	//Lanzamos un sample
 	BASS_ChannelPlay(hSampleChannel, true);
+	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_MUSIC_SPEED, 10);
+	//BASS_ChannelUpdate(hSampleChannel, 0.9);
+	//printf("%d\n", BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_BUFFER, 0.0f));
+
 }

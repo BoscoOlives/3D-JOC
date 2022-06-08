@@ -95,16 +95,14 @@ void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
     float forwardDot = forward.dot(toTarget);
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
-        if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
+        if (forwardDot < 0.98f && !colliding) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
             yaw += 90.0f * g->world.sign(sideDot) * seconds_elapsed;
         }
         else if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
             Vector3 playerVel = forward * 5.0f * seconds_elapsed;
             this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
-            printf("%d\n", colliding);
             if (this->colliding) {
-                printf("Hola\n");
-                yaw += 1000.0f * seconds_elapsed;
+                yaw -= 500.0f * seconds_elapsed;
             }
         }
         look = true;
