@@ -94,16 +94,18 @@ void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
     float sideDot = side.dot(toTarget);
     float forwardDot = forward.dot(toTarget);
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
+        
         if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
             yaw += 90.0f * g->world.sign(sideDot) * seconds_elapsed;
-            
         }
         else if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
             Vector3 playerVel = forward * 5.0f * seconds_elapsed;
             this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
-            /*if (colliding) {
-                yaw += 45.0f;
-            }*/
+            printf("%d\n", colliding);
+            if (this->colliding) {
+                printf("Hola\n");
+                yaw += 1000.0f * seconds_elapsed;
+            }
         }
         look = true;
     }
@@ -123,7 +125,7 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         Vector3 collnorm;
         //comprobamos si colisiona el objeto con la esfera
         if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm)) {
-            colliding = true;
+            this->colliding = false;
             continue; //si no colisiona, pasamos al siguiente objeto
         }
         //si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
@@ -132,7 +134,8 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         //yaw = yaw + 10.0f;
         //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
         nexPos.y = 0;
-        colliding = false;
+        this->colliding = true;
+        break;
         //reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
         //playerVel = reflect(playerVel, collnorm) * 0.95;
     }
