@@ -60,9 +60,16 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 	Animation* walk = g->anim_walk;
 	Animation* run = g->anim_run;
 
+	
 	float t = fmod(time, walk->duration) / walk->duration;
 	walk->assignTime(t * walk->duration);
 	run->assignTime(t * run->duration);
+	/*if (g->slowMotion) {
+
+		float t = fmod(time, walk->duration) / walk->duration;
+		walk->assignTime(t * walk->duration * 0.5);
+		run->assignTime(t * run->duration * 0.5);
+	}*/
 
 	Skeleton resultSk;
 
@@ -80,6 +87,7 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 
 	model.scale(0.01, 0.01, 0.01); //els enemics tenen un escala gigant i s'ha de reescalar cada cop
 
+	mesh->createCollisionModel(false);
 	//enable shader upload uniforms
 	a_shader->enable();
 	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
@@ -107,5 +115,10 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 		Entity* pistol_entity = new Entity(localToWorldMatrix, g->mesh_pistol_e, g->texture_black);
 		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, g->cameraLocked);
 	}
+
+	if (!g->cameraLocked) {
+		mesh->renderBounding(model);
+	}
+
 }
 

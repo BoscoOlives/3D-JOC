@@ -42,6 +42,7 @@ public:
 	//Variables	BOSCO &	RICCI
 	std::vector<Entity*> entities;
 	std::vector<Entity*> enemies;
+	std::vector<Entity*> bullets;
 	std::vector<Vector3> points;
     Entity* selectedEntity = NULL;
 	World world;
@@ -80,10 +81,13 @@ public:
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
 	Matrix44 playerModel;
-	//Vector3 character_center;
 	Animation* anim_walk;
 	Animation* anim_run;
 	HSAMPLE shoot;
+	Mesh* mesh_sphere;
+
+	float load_distance = 200.0f;
+	float no_render_distance = 1000.0f;
 	
     
 

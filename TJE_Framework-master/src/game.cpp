@@ -8,11 +8,6 @@
 
 Game* Game::instance = NULL;
 
-
-float lod_distance = 200.0f;
-float no_render_distance = 1000.0f;
-
-
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
 	this->window_width = window_width;
@@ -53,6 +48,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 		std::cout << "ERROR initializing audio" << std::endl;
 	}
 	shoot = LoadSample("data/audios/paintball.wav");
+	player->enemy = false;
 	//pathfinding
 	world.creteGrid();
 	//hide the cursor
@@ -147,11 +143,18 @@ void Game::render(void)
 		Entity* entity = entities[i];
 		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	}
+
 	//render de tots els enemics
 	for (size_t i = 0; i < enemies.size(); i++) { //Renderitza tots els enemics que es creen
 		Entity* entity = enemies[i];
 		Player* enemy = player_enemies[i];
 		entity->RenderEntityAnim(GL_TRIANGLES, anim_shader, camera, enemy->pos, enemy->yaw, enemy->look);
+	}
+
+	//render de totes les bales
+	for (size_t i = 0; i < bullets.size(); i++) { //Renderitza totes les bales que es creen
+		Entity* entity = bullets[i];
+		entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
 	}
 
 	if (!cameraLocked) {//TEXT TECLES MODE EDICIÓ
@@ -221,7 +224,7 @@ void Game::update(double seconds_elapsed)
 		if (Input::isKeyPressed(SDL_SCANCODE_A)) { playerVel = playerVel - (playerSpeed * right);  slowMotion = false; }
 
 		if (slowMotion) {
-			elapsed_time *= 0.01f;
+			elapsed_time *= 0.1f;
 
 		}
 
@@ -241,12 +244,14 @@ void Game::update(double seconds_elapsed)
 
 	}
 	//update bala de la posicio i si colisiona amb enemics o parets
-	world.shooting_update(entities, enemies);
+	world.shooting_update(entities, enemies, bullets);
+
+
 
 	//AI ENEMIES - Canvi de posicio dels enemics  + comprovar colisions enemics
 	for (size_t i = 0; i < player_enemies.size(); i++){
 		Player* enemy = player_enemies[i];
-		enemy->AIEnemy(seconds_elapsed, elapsed_time);
+		enemy->AIEnemy(elapsed_time);
 	}
 	
 	//to navigate with the mouse fixed in the middle
@@ -348,7 +353,7 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 	}
 	if (event.button == SDL_BUTTON_LEFT && !player->shot) //solament pot disparar quan ha acabat la animaci— de disparar
 	{
-		entities = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, entities, playerModel);
+		bullets = player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, bullets, playerModel);
 		player->shot = true;
 	}
 }
@@ -372,6 +377,8 @@ void Game::onResize(int width, int height)
 }
 
 void Game::loadTexturesAndMeshes() {
+	mesh_sphere = Mesh::Get("data/sphere.obj");
+
 	mesh_ground = new Mesh();
 	mesh_ground->createPlane(80);
 	texture_ground = Texture::Get("data/ground-mosaic.png");
@@ -398,8 +405,8 @@ void Game::loadTexturesAndMeshes() {
 	mesh_zona1 = Mesh::Get("data/zona_1.obj");
 	texture_zona1 = Texture::Get("data/zona_1.png");
 	
-	mesh_bullet = Mesh::Get("data/bullet.obj");
-	texture_bullet = Texture::Get("data/bullet.png");
+	mesh_bullet = Mesh::Get("data/bullet_hack.obj");
+	texture_bullet = Texture::Get("data/bullet_hack.png");
 
 	//imports d'arxius d'animació
 	mesh_cowboy_run = Mesh::Get("data/animation/cowboy_run.mesh");
@@ -441,6 +448,7 @@ void Game::PlayGameSound(HSAMPLE fileSample) {
 	if(slowMotion){ BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 15000); }
 	else { BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 0); }
 	
+	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_VOL, 0.2); //volumen del dispar (el podriem controlar amb una variable des del menu!
 	//Lanzamos un sample
 	BASS_ChannelPlay(hSampleChannel, true);
 

@@ -205,56 +205,64 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
      
 }
 
-void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies) {
+void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
-    for (size_t i = 0; i < entities.size(); i++)
+    for (size_t i = 0; i < bullets.size(); i++) //bullets.size
     {
-        Entity* entity = entities[i]; // cercam les BULLETS
-        if (entity->current_entity == Entity::ENTITY_ID::BULLET) { //render de les bales
-            float vel = 70.f;
-            entity->update_position_moving(g->elapsed_time, vel);
+        Entity* entity = bullets[i]; // cercam les BULLETS
+        float vel = 5.0f;
+        entity->update_position_moving(g->elapsed_time, vel);
+            
+        Vector3 bullet_center = entity->model.getTranslation();
+        if (bullet_center.y < 0.0f) { //si la bala atravessa el terra, elimina la bala
+            bullets.erase(bullets.begin() + i);
+            continue;
+        }
+        Vector3 delete_dist = bullet_center - g->player->pos;
+        if (delete_dist.length() > 20.0f) { //si la bala es massa lluny, elimina la bala
+            bullets.erase(bullets.begin() + i);
+            continue;
+        }
 
-            Vector3 bullet_center = entity->model.getTranslation();
+        for (size_t j = 0; j < entities.size(); j++)
+        {
+            Entity* currentEntity = entities[j]; //cercam entitats
 
-            for (size_t j = 0; j < entities.size(); j++)
-            {
-                Entity* currentEntity = entities[j]; //cercam enemics
-
-                if (currentEntity->current_entity != Entity::ENTITY_ID::BULLET) {
-                    Vector3 coll;
-                    Vector3 collnorm;
-                    //comprovam si colisiona  la entitat amb la bala
-                    if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
-                        printf("COLISION BULLET WITH ENTITIE\n");
-                        entities.erase(entities.begin() + i);//si la bala col·lisiona, elimina la bala
-                        break;
-                    }
-                }
-            }
-            for (size_t j = 0; j < enemies.size(); j++)
-            {
-                Entity* currentEnemy = enemies[j]; //cercam enemics
-
-                if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
-                    Vector3 coll;
-                    Vector3 collnorm;
-                    //currentEnemy->mesh->testSphereCollision(<#Matrix44 model#>, <#Vector3 center#>, <#float radius#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
-                    //comprovam si colisiona el enemic amb la bala
-                    currentEnemy->model.scale(2.0, 2.0, 2.0);
-                    if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 0.2, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
-                    Vector3 pos; Vector3 normal;
-                    //currentEnemy->mesh->testRayCollision(<#Matrix44 model#>, <#Vector3 ray_origin#>, <#Vector3 ray_direction#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
-                    //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal)) {
-                        printf("COLISION BULLET WITH ENEMY\n");
-                        enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
-                        g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
-                        entities.erase(entities.begin() + i);//si la bala col·lisiona, elimina la bala
-                        break;
-                    }
+            if (currentEntity->current_entity != Entity::ENTITY_ID::BULLET) {
+                Vector3 coll;
+                Vector3 collnorm;
+                //comprovam si colisiona  la entitat amb la bala
+                if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
+                    printf("COLISION BULLET WITH ENTITIE\n");
+                    bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+                    continue;
                 }
             }
         }
+        for (size_t j = 0; j < enemies.size(); j++)
+        {
+            Entity* currentEnemy = enemies[j]; //cercam enemics
+
+            if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
+                Vector3 coll;
+                Vector3 collnorm;
+                //comprovam si colisiona el enemic amb la bala
+                currentEnemy->model.scale(2.0, 2.0, 2.0);
+
+                if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 0.2, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
+                Vector3 pos; Vector3 normal;
+                //currentEnemy->mesh->testRayCollision(<#Matrix44 model#>, <#Vector3 ray_origin#>, <#Vector3 ray_direction#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
+                //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
+                    printf("COLISION BULLET WITH ENEMY\n");
+                    enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
+                    g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
+                    bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+                    continue;
+                }
+            }
+        }
+        
     }
 }
 

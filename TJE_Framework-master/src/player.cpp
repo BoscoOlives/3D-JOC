@@ -23,6 +23,8 @@ Player::Player() {
     gunUp = true;
     look = false;
     colliding = false;
+    shoot_cooldown = 0.0f;
+    enemy = true;
 }
 
 Matrix44 Player::getModel() {
@@ -35,8 +37,12 @@ Matrix44 Player::getModel() {
 std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
-    Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
-
+    Vector3 dir;
+    if (enemy)
+        dir = g->player->pos - this->pos;
+    else
+        dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
+    
     Mesh* mesh_bullet = g->mesh_bullet;
     Matrix44 model;
     //model.scale(0.01, 0.01, 0.01);
@@ -44,7 +50,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     
     float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER
     
-    model.setTranslation(playerModel.getTranslation().x, positionY, playerModel.getTranslation().z);
+    model.setTranslation(playerModel.getTranslation().x + dir.x*0.2, positionY, playerModel.getTranslation().z+ dir.z * 0.2);
     model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
 
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
@@ -80,7 +86,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 }
 
 
-void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
+void Player::AIEnemy(float elapsed_time) {
     float facingDistance = 10.0f;
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
@@ -96,13 +102,20 @@ void Player::AIEnemy(float seconds_elapsed, float elapsed_time) {
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
         if (forwardDot < 0.98f && !colliding) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
-            yaw += 90.0f * g->world.sign(sideDot) * seconds_elapsed;
+            yaw += 90.0f * g->world.sign(sideDot) * elapsed_time;
         }
-        else if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
-            Vector3 playerVel = forward * 5.0f * seconds_elapsed;
-            this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
-            if (this->colliding) {
-                yaw -= 500.0f * seconds_elapsed;
+        else {
+            if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
+                Vector3 playerVel = forward * 3.0f * elapsed_time;
+                this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
+                if (this->colliding) {
+                    pos = pos + Vector3(0.02f, 0.0f, 0.0f);
+                }
+            }
+            shoot_cooldown += elapsed_time;
+            if (shoot_cooldown > 1) {
+                shoot_cooldown = 0.0f;//reiniciem cooldown, cada enemic pot disparar cada 1 segon
+                g->bullets = Shoot(GL_TRIANGLES, g->camera, g->shader, g->cameraLocked, g->bullets, model); //enemics disparen
             }
         }
         look = true;
@@ -133,6 +146,10 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
         nexPos.y = 0;
         this->colliding = true;
+        /*float coll_magnitud = sqrt(pow(coll.x, 2) + pow(coll.y, 2) + pow(coll.z, 2));
+        float collnorm_magnitud = sqrt(pow(collnorm.x, 2) + pow(collnorm.y, 2) + pow(collnorm.z, 2));
+        yaw = acos(dot(coll, collnorm) / coll_magnitud * collnorm_magnitud);*/
+
         break;
         //reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
         //playerVel = reflect(playerVel, collnorm) * 0.95;

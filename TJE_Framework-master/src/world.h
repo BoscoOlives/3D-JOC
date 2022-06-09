@@ -50,7 +50,7 @@ public:
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
-    void shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies);
+    void shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets);
     Vector3 Lerp(Vector3 a, Vector3 b, float t);
     void creteGrid();
     void renderPath();
