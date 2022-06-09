@@ -61,7 +61,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
     if (gunUp) {
         gunAngle += 1000.0f * elapsed_time;
     }
-    if (gunAngle >= 45.0f) {
+    if (gunAngle >= 22.0f) {
         gunUp = false;    
     }
 

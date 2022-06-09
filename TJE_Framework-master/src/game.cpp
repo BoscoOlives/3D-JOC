@@ -222,6 +222,7 @@ void Game::update(double seconds_elapsed)
 
 		if (slowMotion) {
 			elapsed_time *= 0.01f;
+
 		}
 
 		//Colisions dels Players (player + enemcis)
@@ -436,10 +437,12 @@ void Game::PlayGameSound(HSAMPLE fileSample) {
 	//Creamos un canal para el sample
 	hSampleChannel = BASS_SampleGetChannel(fileSample, false);
 
+	//si esteim en SlowMotion, baixam la freq. de mostreig de canal (original = 44100Hz)
+	if(slowMotion){ BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 15000); }
+	else { BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 0); }
+	
 	//Lanzamos un sample
 	BASS_ChannelPlay(hSampleChannel, true);
-	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_MUSIC_SPEED, 10);
-	//BASS_ChannelUpdate(hSampleChannel, 0.9);
-	//printf("%d\n", BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_BUFFER, 0.0f));
+
 
 }
