@@ -153,7 +153,7 @@ Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Ent
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
 
-    for (int i = (int)entities.size() - 1; i >= 0; i--)
+    for (size_t i = 0; i < entities.size(); i++)
     {
         Entity* entity = entities[i];
         Vector3 pos;
