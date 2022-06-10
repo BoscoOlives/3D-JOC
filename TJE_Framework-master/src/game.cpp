@@ -165,6 +165,10 @@ void Game::render(void)
 		std::string text_gameplay = "SPACE Shot\nWASD Move Player\nMouse Move Camera\n";
 		drawText(this->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
 		drawText(this->window_width/2, this->window_height / 2, "+", Vector3(1, 1, 1), 2);
+		std:string num_enemies = "Nº Enemies" + to_string((unsigned int)enemies.size());
+		drawText(2, 20, num_enemies, Vector3(1, 1, 1), 2);
+
+		//printf("%d", (unsigned int)entities.size());
 	}
 
 	//Pathfinding
@@ -229,7 +233,7 @@ void Game::update(double seconds_elapsed)
 		}
 
 		//Colisions dels Players (player + enemcis)
-		player->checkColisions(playerVel, entities, elapsed_time);
+		player->checkColisions(playerVel, entities, elapsed_time, 0.2f);
 
 	}
 	else {

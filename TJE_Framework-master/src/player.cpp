@@ -13,7 +13,7 @@
 
 Player* Player::instance = NULL;
 
-Player::Player() {
+Player::Player(unsigned int id) {
     instance = this;
     shooting = false;
     this->pitch = 0.0f;
@@ -22,9 +22,11 @@ Player::Player() {
     shot = false;
     gunUp = true;
     look = false;
-    colliding = false;
+    collidingWithEntities = false;
+    collidingWithEnemies = false;
     shoot_cooldown = 0.0f;
     enemy = true;
+    this->id = id;
 }
 
 Matrix44 Player::getModel() {
@@ -101,15 +103,21 @@ void Player::AIEnemy(float elapsed_time) {
     float forwardDot = forward.dot(toTarget);
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
-        if (forwardDot < 0.98f && !colliding) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
+        if (forwardDot < 0.98f && !collidingWithEntities) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
             yaw += 90.0f * g->world.sign(sideDot) * elapsed_time;
         }
         else {
             if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
                 Vector3 playerVel = forward * 3.0f * elapsed_time;
-                this->checkColisions(playerVel, g->entities, elapsed_time); //abans de canviar la posicio mira si colisiona
-                if (this->colliding) {
+                this->checkColisions(playerVel, g->entities, elapsed_time, 0.5f); //abans de canviar la posicio mira si colisiona
+                this->checkColisions(playerVel, g->enemies, elapsed_time, 10.0f);
+
+                if (this->collidingWithEntities) {
                     pos = pos + Vector3(0.02f, 0.0f, 0.0f);
+                }
+                if (this->collidingWithEnemies) { //si hi ha colisio enemic-enemic
+                    int random = (rand() % 3)- 1;
+                    pos = pos + Vector3(0.01f * random, 0.0f, 0.01f * random); //apliquem desplaçament random entre -1 0 1
                 }
             }
             shoot_cooldown += elapsed_time;
@@ -123,7 +131,7 @@ void Player::AIEnemy(float elapsed_time) {
     else{ look = false; }
     
 }
-void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time) {
+void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time, float radio_coll) {
     Vector3 nexPos = pos + playerVel;
     //calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
     character_center = nexPos + Vector3(0, 0.5, 0);
@@ -132,11 +140,21 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
     {
         Entity* currentEntity = entities[i];
 
+        if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY && i == this->id) { //si l'entitat és un enemic i no és ell mateix
+            continue;
+        }
         Vector3 coll;
         Vector3 collnorm;
         //comprobamos si colisiona el objeto con la esfera
-        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, 0.2, coll, collnorm)) {
-            this->colliding = false;
+        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, radio_coll, coll, collnorm)) {
+
+            if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY){ //si colisiona amb un altra enemic
+                this->collidingWithEnemies = false;
+            }
+            else {
+                this->collidingWithEntities = false;
+
+            }
             continue; //si no colisiona, pasamos al siguiente objeto
         }
         //si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
@@ -145,7 +163,14 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         //yaw = yaw + 10.0f;
         //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
         nexPos.y = 0;
-        this->colliding = true;
+
+        if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
+            this->collidingWithEnemies = true;
+        }
+        else {
+            this->collidingWithEntities = true;
+
+        }
         /*float coll_magnitud = sqrt(pow(coll.x, 2) + pow(coll.y, 2) + pow(coll.z, 2));
         float collnorm_magnitud = sqrt(pow(collnorm.x, 2) + pow(collnorm.y, 2) + pow(collnorm.z, 2));
         yaw = acos(dot(coll, collnorm) / coll_magnitud * collnorm_magnitud);*/

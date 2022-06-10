@@ -27,16 +27,18 @@ public:
     bool gunUp;
     Vector3 character_center;
     bool look;
-    bool colliding;
+    bool collidingWithEntities;
+    bool collidingWithEnemies;
     float shoot_cooldown;
     bool enemy;
+    unsigned int id;
 
-    Player();
+    Player(unsigned int id);
     Matrix44 getModel();
     std::vector<Entity*> Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel);
     Matrix44 Coil(float elapsed_time, Matrix44 gun);
     void AIEnemy(float elapsed_time);
-    void checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time);
+    void checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time, float radio_coll);
 };
 
 

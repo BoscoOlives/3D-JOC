@@ -22,7 +22,7 @@
 class World {
 public:
     static World* instance;
-    Player player;
+    Player player = Player(0);
     std::vector<Player*> enemies;
     std::vector<Entity*> entities;
     //buildings, stages, scores...

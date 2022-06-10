@@ -15,7 +15,7 @@ World* World::instance = NULL;
 
 World::World() {
     instance = this;    
-    //this->player = Player();
+    //this->player = new Player(0);
 }
 
 void World::saveWorld(std::vector<Entity*> entities) {
@@ -134,7 +134,8 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
     model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
     if (entityToAdd == 6){
         model.scale(0.01, 0.01, 0.01);
-        Player* player = new Player();
+        Player* player = new Player((unsigned int)entities.size());
+        
         player->pos = spawnPos;
         g->player_enemies.push_back(player);
         
