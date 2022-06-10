@@ -16,7 +16,8 @@
 #include "texture.h"
 #include "fbo.h"
 #include "shader.h"
-#include <bass.h>
+//#include <bass.h>
+#include "extra/bass.h"
 
 class Game
 {
