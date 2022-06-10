@@ -208,7 +208,7 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
 void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
-    for (size_t i = 0; i < bullets.size(); i++) //bullets.size
+    for (int i = (int)bullets.size()-1; i >= 0; i--) //bullets.size
     {
         Entity* entity = bullets[i]; // cercam les BULLETS
         float vel = 5.0f;
