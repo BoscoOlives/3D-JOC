@@ -153,7 +153,7 @@ Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Ent
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
 
-    for (size_t i = 0; i < entities.size(); i++)
+    for (int i = (int)entities.size() - 1; i >= 0; i--)
     {
         Entity* entity = entities[i];
         Vector3 pos;
@@ -189,7 +189,7 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
 
-    for (size_t i = 0; i < entities.size(); i++)
+    for (int i = (int)entities.size() - 1; i >= 0; i--)
     {
         Entity* entity = entities[i];
         Vector3 pos;
@@ -225,22 +225,19 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
             continue;
         }
 
-        for (size_t j = 0; j < entities.size(); j++)
+        for (int j = (int)entities.size() - 1; j >= 0; j--)
         {
             Entity* currentEntity = entities[j]; //cercam entitats
-
-            if (currentEntity->current_entity != Entity::ENTITY_ID::BULLET) {
-                Vector3 coll;
-                Vector3 collnorm;
-                //comprovam si colisiona  la entitat amb la bala
-                if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
-                    printf("COLISION BULLET WITH ENTITIE\n");
-                    bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
-                    continue;
-                }
+            Vector3 coll;
+            Vector3 collnorm;
+            //comprovam si colisiona  la entitat amb la bala
+            if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
+                printf("COLLISION BULLET WITH ENTITY\n");
+                bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+                continue;
             }
         }
-        for (size_t j = 0; j < enemies.size(); j++)
+        for (int j = (int)enemies.size() - 1; j >= 0; j--)
         {
             Entity* currentEnemy = enemies[j]; //cercam enemics
 
@@ -254,7 +251,7 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                 Vector3 pos; Vector3 normal;
                 //currentEnemy->mesh->testRayCollision(<#Matrix44 model#>, <#Vector3 ray_origin#>, <#Vector3 ray_direction#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
-                    printf("COLISION BULLET WITH ENEMY\n");
+                    printf("COLLISION BULLET WITH ENEMY\n");
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                     g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
                     bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
