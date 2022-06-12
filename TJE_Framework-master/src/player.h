@@ -32,6 +32,7 @@ public:
     float shoot_cooldown;
     bool enemy;
     unsigned int id;
+    float bullet_offset;
 
     Player(unsigned int id);
     Matrix44 getModel();

@@ -42,7 +42,7 @@ public:
 
     World();
 
-    void saveWorld(std::vector<Entity*> entities);
+    void saveWorld(std::vector<Entity*> entities, std::vector<Entity*> enemies);
     std::vector<Entity*> loadWorld(std::vector<Entity*> entities);
 
     std::vector<Entity*> AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities);

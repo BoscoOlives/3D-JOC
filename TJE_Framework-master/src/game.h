@@ -66,8 +66,9 @@ public:
 	Mesh* mesh_zona0 = NULL;
 	Mesh* mesh_zona1 = NULL;
 	Mesh* mesh_bullet = NULL;
-	Mesh* mesh_cowboy_walk = NULL;
+	Mesh* mesh_cowboy_idle = NULL;
 	Mesh* mesh_cowboy_run = NULL;
+	Mesh* box_col = NULL;
 	Texture* texture_cowboy = NULL;
 	Texture* texture_bullet = NULL;
 	Texture* texture_zona0 = NULL;
@@ -82,14 +83,22 @@ public:
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
 	Matrix44 playerModel;
-	Animation* anim_walk;
+	Animation* anim_idle;
 	Animation* anim_run;
 	HSAMPLE shoot;
 	Mesh* mesh_sphere;
 
 	float load_distance = 200.0f;
 	float no_render_distance = 1000.0f;
-	
+	bool pause;
+
+	//botons
+	Texture* play;
+	Texture* restart;
+	Texture* save;
+	Texture* exit;
+	Texture* volumeOn;
+	Texture* volumeOff;
     
 
 	Game( int window_width, int window_height, SDL_Window* window );
@@ -112,6 +121,8 @@ public:
 	void loadTexturesAndMeshes();
 	HSAMPLE LoadSample(const char* fileName);
 	void PlayGameSound(HSAMPLE fileSample);
+	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
+	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
 };
 
 

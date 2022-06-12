@@ -18,7 +18,7 @@ World::World() {
     //this->player = new Player(0);
 }
 
-void World::saveWorld(std::vector<Entity*> entities) {
+void World::saveWorld(std::vector<Entity*> entities, std::vector<Entity*> enemies) {
     //save player, enemies (positions, rotations...)
     printf("Saving World...\n");
     FILE* file = fopen("world.txt", "wb");
@@ -27,15 +27,26 @@ void World::saveWorld(std::vector<Entity*> entities) {
         Entity* entity = entities[i];
         Matrix44 model = entity->model;
 
-        //for (size_t j = 0; j < 15; j++)
-        //{
-        //    std::string str = { std::to_string(model.m[j]) + "\n" };
-        //    const char* buffer = str.c_str();
-        //    fwrite(buffer, strlen(buffer) / 4 + 1, sizeof(buffer), file);
-        //}
-
         if (entity->current_entity != Entity::ENTITY_ID::BULLET) {
             std::string str = { 
+            std::to_string(entity->current_entity) + "\n" +
+            std::to_string(model._11) + "\n" + std::to_string(model._12) + "\n" + std::to_string(model._13) + "\n" + std::to_string(model._14) + "\n" +
+            std::to_string(model._21) + "\n" + std::to_string(model._22) + "\n" + std::to_string(model._23) + "\n" + std::to_string(model._24) + "\n" +
+            std::to_string(model._31) + "\n" + std::to_string(model._32) + "\n" + std::to_string(model._33) + "\n" + std::to_string(model._34) + "\n" +
+            std::to_string(model._41) + "\n" + std::to_string(model._42) + "\n" + std::to_string(model._43) + "\n" + std::to_string(model._44) + "\n" };
+
+            const char* buffer = str.c_str();
+
+            fwrite(buffer, sizeof(char), strlen(buffer), file);
+        }
+    }
+    for (size_t i = 0; i < enemies.size(); i++)
+    {
+        Entity* entity = enemies[i];
+        Matrix44 model = entity->model;
+
+        if (entity->current_entity != Entity::ENTITY_ID::BULLET) {
+            std::string str = {
             std::to_string(entity->current_entity) + "\n" +
             std::to_string(model._11) + "\n" + std::to_string(model._12) + "\n" + std::to_string(model._13) + "\n" + std::to_string(model._14) + "\n" +
             std::to_string(model._21) + "\n" + std::to_string(model._22) + "\n" + std::to_string(model._23) + "\n" + std::to_string(model._24) + "\n" +
@@ -74,8 +85,18 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
                 this->get_Mesh_Texture_Entity(id, mesh, texture); //funció per obtenir la mesh i la texture depenent de la ID
                 Entity* entity = new Entity(model, mesh, texture);
                 entity->current_entity = (Entity::ENTITY_ID)id;
-                
-                entities.push_back(entity);
+
+                if(entity->current_entity == Entity::ENTITY_ID::ENEMY){
+                    
+                    Player* player = new Player((unsigned int)g->enemies.size()); //declarem un nou Player amb el seu ID corresponent
+                    player->pos = model.getTranslation(); //guardem la posicio a partir de la informació de la model
+                    g->player_enemies.push_back(player);//add del enemic a la llista de players
+
+                    g->enemies.push_back(entity);//add del enemic a la llista de entities
+                }
+                else{
+                    entities.push_back(entity);
+                }
                 i = -1;
             }
             std::cout << line << "\n";
@@ -245,12 +266,17 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
             if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
                 Vector3 coll;
                 Vector3 collnorm;
+
+                Matrix44 current_model;
+                Mesh* current_mesh;
+                //en cas de ser un enemic, agafem la seva posicio i cap propietat més de la model
+                current_model.setTranslation(currentEnemy->model.getTranslation().x, currentEnemy->model.getTranslation().y, currentEnemy->model.getTranslation().z);
+
                 //comprovam si colisiona el enemic amb la bala
                 currentEnemy->model.scale(2.0, 2.0, 2.0);
-
-                if (currentEnemy->mesh->testSphereCollision(currentEnemy->model, bullet_center, 0.2, coll, collnorm)) { //NOTA: la colisio esta en els peus, hauriem de pensar algo
+                  //g->box_col = MESH de un CUB RECTANGULAR amb les mides d'un enemic, molt millor per comprovar colisions!
+                if (g->box_col->testSphereCollision(current_model, bullet_center, 0.2, coll, collnorm)) {
                 Vector3 pos; Vector3 normal;
-                //currentEnemy->mesh->testRayCollision(<#Matrix44 model#>, <#Vector3 ray_origin#>, <#Vector3 ray_direction#>, <#Vector3 &collision#>, <#Vector3 &normal#>)
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
                     printf("COLLISION BULLET WITH ENEMY\n");
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic

@@ -57,27 +57,27 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 
 	Game* g = Game::instance;
 	float time = g->time;
-	Animation* walk = g->anim_walk;
+	Animation* idle = g->anim_idle;
 	Animation* run = g->anim_run;
 
 	
-	float t = fmod(time, walk->duration) / walk->duration;
-	walk->assignTime(t * walk->duration);
-	run->assignTime(t * run->duration);
-	/*if (g->slowMotion) {
+	float t = fmod(time, run->duration) / run->duration;
+	idle->assignTime(time);
+	run->assignTime(t* run->duration);
+	if (g->slowMotion) {
 
-		float t = fmod(time, walk->duration) / walk->duration;
-		walk->assignTime(t * walk->duration * 0.5);
-		run->assignTime(t * run->duration * 0.5);
-	}*/
+		float t = fmod(time, run->duration*2.0f) / run->duration*0.5f;
+		idle->assignTime(time*0.5);
+		run->assignTime(t * run->duration);
+	}
 
 	Skeleton resultSk;
 
 	if (look) {
-		blendSkeleton(&walk->skeleton, &run->skeleton, 1.0f, &resultSk);
+		blendSkeleton(&idle->skeleton, &run->skeleton, 1.0f, &resultSk);
 	}
 	else{
-		blendSkeleton(&walk->skeleton, &run->skeleton, 0.0f, &resultSk);
+		blendSkeleton(&idle->skeleton, &run->skeleton, 0.0f, &resultSk);
 	}
 
 	//actualitzem la model amb els valors del player de POS i YAW

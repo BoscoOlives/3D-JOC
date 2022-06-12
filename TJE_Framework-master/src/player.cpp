@@ -27,6 +27,7 @@ Player::Player(unsigned int id) {
     shoot_cooldown = 0.0f;
     enemy = true;
     this->id = id;
+    bullet_offset = 0.5f;
 }
 
 Matrix44 Player::getModel() {
@@ -51,8 +52,9 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
     float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER
-    
-    model.setTranslation(playerModel.getTranslation().x + dir.x*0.2, positionY, playerModel.getTranslation().z+ dir.z * 0.2);
+    if (!enemy) { float bullet_offset = 0.2;} //si es tracta del Jugador, el offset de on surt la BALA, que sigui mes próxim a la pistola
+    model.setTranslation(playerModel.getTranslation().x + dir.x* bullet_offset, positionY, playerModel.getTranslation().z+ dir.z * bullet_offset);
+
     model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
 
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
@@ -89,7 +91,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 
 
 void Player::AIEnemy(float elapsed_time) {
-    float facingDistance = 10.0f;
+    float facingDistance = 7.0f; //distancia la qual ens comença a veure un enemic
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
     Vector3 side = model.rotateVector(Vector3(1, 0, 0)).normalize();
@@ -104,13 +106,13 @@ void Player::AIEnemy(float elapsed_time) {
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
         if (forwardDot < 0.98f && !collidingWithEntities) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
-            yaw += 90.0f * g->world.sign(sideDot) * elapsed_time;
+            yaw += 90.0f * g->world.sign(sideDot) * elapsed_time*2.0f; //el *2 es perque la rotacio es molta lenta en comparació el desplaçament
         }
         else {
             if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
-                Vector3 playerVel = forward * 3.0f * elapsed_time;
-                this->checkColisions(playerVel, g->entities, elapsed_time, 0.5f); //abans de canviar la posicio mira si colisiona
-                this->checkColisions(playerVel, g->enemies, elapsed_time, 10.0f);
+                Vector3 playerVel = forward * 1.0f * elapsed_time;
+                this->checkColisions(playerVel, g->entities, elapsed_time, 0.1f); //abans de canviar la posicio mira si colisiona
+                this->checkColisions(playerVel, g->enemies, elapsed_time, 1.0f);
 
                 if (this->collidingWithEntities) {
                     pos = pos + Vector3(0.02f, 0.0f, 0.0f);
@@ -132,6 +134,7 @@ void Player::AIEnemy(float elapsed_time) {
     
 }
 void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time, float radio_coll) {
+    Game* g = Game::instance;
     Vector3 nexPos = pos + playerVel;
     //calculamos el centro de la esfera de colisión del player elevandola hasta la cintura
     character_center = nexPos + Vector3(0, 0.5, 0);
@@ -140,13 +143,24 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
     {
         Entity* currentEntity = entities[i];
 
-        if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY && i == this->id) { //si l'entitat és un enemic i no és ell mateix
+        if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY && i == this->id) { //si l'entitat és un enemic i és ell mateix
             continue;
         }
         Vector3 coll;
         Vector3 collnorm;
+        Matrix44 current_model; //creem una model per fer els càlculs, pq si es enemic, no utilitzarem la seva model!
+        Mesh* current_mesh; //creem una mesh per la mateixa raó
+        if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY) {
+            //Si la entitat es un enemic, agafa model nomes amb propietats de posicio, i MESH de un RECTANGLE de la seva mida
+            current_model.setTranslation(currentEntity->model.getTranslation().x, currentEntity->model.getTranslation().y, currentEntity->model.getTranslation().z);
+            current_mesh = g->box_col;
+        }
+        else {
+            current_model = currentEntity->model;
+            current_mesh = currentEntity->mesh;
+        }
         //comprobamos si colisiona el objeto con la esfera
-        if (!currentEntity->mesh->testSphereCollision(currentEntity->model, character_center, radio_coll, coll, collnorm)) {
+        if (!currentEntity->mesh->testSphereCollision(current_model, character_center, radio_coll, coll, collnorm)) {
 
             if (currentEntity->current_entity == Entity::ENTITY_ID::ENEMY){ //si colisiona amb un altra enemic
                 this->collidingWithEnemies = false;
