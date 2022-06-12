@@ -15,6 +15,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	this->window = window;
 	instance = this;
 	must_exit = false;
+    pause = false;
 
 	fps = 0;
 	frame = 0;
@@ -165,7 +166,7 @@ void Game::render(void)
 		std::string text_gameplay = "SPACE Shot\nWASD Move Player\nMouse Move Camera\n";
 		drawText(this->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
 		drawText(this->window_width/2, this->window_height / 2, "+", Vector3(1, 1, 1), 2);
-		std:string num_enemies = "Nº Enemies" + to_string((unsigned int)enemies.size());
+		std:string num_enemies = "N. Enemies" + to_string((unsigned int)enemies.size());
 		drawText(2, 20, num_enemies, Vector3(1, 1, 1), 2);
 
 		//printf("%d", (unsigned int)entities.size());
@@ -186,6 +187,8 @@ void Game::render(void)
 
 void Game::update(double seconds_elapsed)
 {
+    if (pause) return; //si pausa, sortim de la funci—
+    
 	slowMotion = true;    
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
@@ -329,7 +332,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		}
 		case SDLK_9: entities = world.loadWorld(entities); break;
 		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 5; //canviar enum sense bullet (enum = 5) i el 6 es el enemic
-			
+        case SDLK_p: pause = !pause;
 
 	}
 }

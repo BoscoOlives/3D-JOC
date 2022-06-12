@@ -53,6 +53,7 @@ public:
 	Texture* texture_white = NULL;
 	bool slowMotion;
 	bool cameraLocked;
+    bool pause; 
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	float angle;
 	float mouse_speed;
