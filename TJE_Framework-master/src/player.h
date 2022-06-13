@@ -40,6 +40,7 @@ public:
     Matrix44 Coil(float elapsed_time, Matrix44 gun);
     void AIEnemy(float elapsed_time);
     void checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time, float radio_coll);
+    void setSpawnPoint();
 };
 
 

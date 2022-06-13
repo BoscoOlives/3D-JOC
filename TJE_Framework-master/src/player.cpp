@@ -28,6 +28,7 @@ Player::Player(unsigned int id) {
     enemy = true;
     this->id = id;
     bullet_offset = 0.5f;
+
 }
 
 Matrix44 Player::getModel() {
@@ -42,7 +43,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     Game* g = Game::instance;
     Vector3 dir;
     if (enemy)
-        dir = g->player->pos - this->pos;
+        dir = g->player->pos - this->pos; //IDEA: aplicar un petit offset random a nes Vector3 de la posicio del jugador!
     else
         dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     
@@ -63,6 +64,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
 
     entities.push_back(entity_bullet);
     g->PlayGameSound(g->shoot);
+    //g->PlayGameSound(g->recoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
     return entities;
 }
 
@@ -71,7 +73,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
     if (gunUp) {
         gunAngle += 1000.0f * elapsed_time;
     }
-    if (gunAngle >= 22.0f) {
+    if (gunAngle >= 26.0f) {
         gunUp = false;    
     }
 
@@ -91,7 +93,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 
 
 void Player::AIEnemy(float elapsed_time) {
-    float facingDistance = 7.0f; //distancia la qual ens comença a veure un enemic
+    float facingDistance = 9.0f; //distancia la qual ens comença a veure un enemic
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
     Vector3 side = model.rotateVector(Vector3(1, 0, 0)).normalize();
@@ -196,4 +198,6 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
     pos = nexPos;
     
 }
-
+void Player::setSpawnPoint() {
+    pos = Vector3(-9.0f, 0.0f, 3.0f);
+}

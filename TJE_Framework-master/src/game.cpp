@@ -48,12 +48,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	anim_shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
 	
 	//inicialitzar part d'audio
-	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
-	{
-		std::cout << "ERROR initializing audio" << std::endl;
-	}
-	shoot = LoadSample("data/audios/paintball.wav");
+	initAudio();
+	LoadAllSamples(); //carregam tots els audios
+	
 	player->enemy = false;
+	//CREAR JUGADOR
+	player_entity = new Entity(playerModel, mesh_pistol, texture_black); //creem la entitat Jugador
+	world.restartWorld();
 	//pathfinding
 	world.creteGrid();
 	//hide the cursor
@@ -89,28 +90,9 @@ void Game::render(void)
 	Matrix44 groundModel;
     Entity ground = Entity(groundModel, mesh_ground, texture_ground);
     ground.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
-	
-	//-------------------RENDER DEL PUNT DE COLISIO!-------------------
-	/*Matrix44 model_colision;
-	model_colision.setTranslation(character_center.x, character_center.y, character_center.z);
-	Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
-	ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
-	//-----------------------------------------------------------------
 
-	//-------------------RENDER DEL PUNT DE COLISIO ENEMICS!-------------------
-	/*for (size_t i = 0; i < player_enemies.size(); i++)
-	{
-		Vector3 pos = player_enemies[i]->character_center;
-		Matrix44 model_colision;
-		model_colision.setTranslation(pos.x, pos.y, pos.z);
-		model_colision.scale(10.0f, 10.0f, 10.0f);
 
-		Entity* ent_colision = new Entity(model_colision, mesh_bullet, texture_black);
-		ent_colision->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
-	}*/
-	//-----------------------------------------------------------------
-
-    //playerModel.translate(player->pos.x, player->pos.y, player->pos.z);
+	printf("%f, %f\n", player->pos.x, player->pos.z);
 	playerModel.setTranslation(player->pos.x, player->pos.y, player->pos.z);
 	//playerModel.rotate(180 * DEG2RAD, Vector3(0, 1, 0));
 	//playerModel.rotate(180 * DEG2RAD, Vector3(1, 0, 0));
@@ -137,12 +119,18 @@ void Game::render(void)
 	playerModel.translate(0.1, 0, 0);
 	if (player->shot) { //moviment que provoca un shot a la arma
 		playerModel = player->Coil(elapsed_time, playerModel);
+
 	}
     //CREAR JUGADOR
-	Entity player_entity = Entity(playerModel, mesh_pistol, texture_black);
+	/*Entity player_entity = Entity(playerModel, mesh_pistol, texture_black);*/
 	//render Player
-	player_entity.RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
-    
+	player_entity->model = playerModel;
+	player_entity->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);
+
+	//Render de la nostra colisio!
+	/*Entity* box = new Entity(playerModel, box_col, texture_black);
+	box->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
+
     //render de totes les entitats (estatiques)
 	for (size_t i = 0; i < entities.size(); i++) { //Renderitza totes les entitats que es creen
 		Entity* entity = entities[i];
@@ -208,6 +196,7 @@ void Game::render(void)
             printf("Play\n");
         }
         else if (RenderButton(100, 200, 100, 100, restart)) {
+			world.restartWorld();
             printf("Restart\n");
         }
         else if (RenderButton(100, 300, 100, 100, save)) {
@@ -298,7 +287,7 @@ void Game::update(double seconds_elapsed)
 
 	}
 	//update bala de la posicio i si colisiona amb enemics o parets
-	world.shooting_update(entities, enemies, bullets);
+	world.shooting_update(entities, enemies, bullets, player_entity);
 
 
 
@@ -382,7 +371,7 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 
 			break;
 		}
-		case SDLK_9: entities = world.loadWorld(entities); break;
+		case SDLK_9: world.loadWorld(); break;
 		case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 5; //canviar enum sense bullet (enum = 5) i el 6 es el enemic
 
 	}
@@ -434,6 +423,9 @@ void Game::onResize(int width, int height)
 
 void Game::loadTexturesAndMeshes() {
 	//BOTONS
+	texture_black = texture_black->getBlackTexture();
+	texture_white = texture_black->getWhiteTexture();
+
 	play = Texture::Get("data/gui/play.png");
 	restart = Texture::Get("data/gui/restart.png");
 	save = Texture::Get("data/gui/save.png");
@@ -482,11 +474,15 @@ void Game::loadTexturesAndMeshes() {
 	box_col = Mesh::Get("data/box_colision_enemy.obj");
 
 
-	texture_black = texture_black->getBlackTexture();
-	texture_white = texture_black->getWhiteTexture();
+	
 }
 
-
+void Game::initAudio(){
+	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
+	{
+		std::cout << "ERROR initializing audio" << std::endl;
+	}
+}
 HSAMPLE Game::LoadSample(const char* fileName) {
 	//El handler para un sample
 	HSAMPLE hSample;
@@ -519,6 +515,12 @@ void Game::PlayGameSound(HSAMPLE fileSample) {
 	BASS_ChannelPlay(hSampleChannel, true);
 
 
+}
+void Game::LoadAllSamples() {
+	shoot = LoadSample("data/audios/paintball.wav");
+	recoil = LoadSample("data/audios/recoil.wav");
+	hit_enemy = LoadSample("data/audios/hit_enemy.wav");
+	hit_player = LoadSample("data/audios/hit_player.wav");
 }
 
 bool Game::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV ) {

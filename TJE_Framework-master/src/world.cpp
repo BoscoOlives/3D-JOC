@@ -14,7 +14,8 @@
 World* World::instance = NULL;
 
 World::World() {
-    instance = this;    
+    instance = this;   
+    player.setSpawnPoint();
     //this->player = new Player(0);
 }
 
@@ -60,7 +61,7 @@ void World::saveWorld(std::vector<Entity*> entities, std::vector<Entity*> enemie
     }
     fclose(file);
 }
-std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
+void World::loadWorld() {
     //load player, enemies (positions, rotations...)
     Game* g = Game::instance;
     Mesh* mesh;
@@ -95,7 +96,7 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
                     g->enemies.push_back(entity);//add del enemic a la llista de entities
                 }
                 else{
-                    entities.push_back(entity);
+                    g->entities.push_back(entity);
                 }
                 i = -1;
             }
@@ -105,7 +106,6 @@ std::vector<Entity*> World::loadWorld(std::vector<Entity*> entities) {
         myfile.close();
     }
     else std::cout << "Unable to open file";
-    return entities;
 
     printf("\nLoading World...\n");
 
@@ -227,7 +227,7 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
      
 }
 
-void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets) {
+void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets, Entity*& entityPlayer) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
     for (int i = (int)bullets.size()-1; i >= 0; i--) //bullets.size
@@ -268,7 +268,6 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                 Vector3 collnorm;
 
                 Matrix44 current_model;
-                Mesh* current_mesh;
                 //en cas de ser un enemic, agafem la seva posicio i cap propietat més de la model
                 current_model.setTranslation(currentEnemy->model.getTranslation().x, currentEnemy->model.getTranslation().y, currentEnemy->model.getTranslation().z);
 
@@ -279,6 +278,7 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                 Vector3 pos; Vector3 normal;
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
                     printf("COLLISION BULLET WITH ENEMY\n");
+                    g->PlayGameSound(g->hit_enemy);
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                     g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
                     bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
@@ -286,6 +286,19 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                 }
             }
         }
+        //Check colisions BALA vs JUGADOR
+        Vector3 coll;
+        Vector3 collnorm;
+        //en cas de ser un enemic, agafem la seva posicio i cap propietat més de la model
+        if (g->box_col->testSphereCollision(entityPlayer->model, bullet_center, 0.1, coll, collnorm)) {
+            printf("YOU DIE!\n");
+            g->PlayGameSound(g->hit_player);
+            bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+            restartWorld(); //reset del WORLD
+            continue;
+        }
+
+
         
     }
 }
@@ -323,4 +336,12 @@ void World::renderPath() {
 float World::sign(float value) {
     return value >= 0.0f ? 1.0f : -1.0f;
 }
-
+void World::restartWorld() {
+    Game* g = Game::instance;
+    g->enemies.clear();
+    g->player_enemies.clear();
+    g->entities.clear();
+    loadWorld();
+    player.setSpawnPoint();
+    
+}

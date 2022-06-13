@@ -46,6 +46,7 @@ public:
 	std::vector<Entity*> bullets;
 	std::vector<Vector3> points;
     Entity* selectedEntity = NULL;
+	Entity* player_entity = NULL;
 	World world;
 	Player* player = &world.player;
 	std::vector<Player*> player_enemies;
@@ -86,11 +87,15 @@ public:
 	Animation* anim_idle;
 	Animation* anim_run;
 	HSAMPLE shoot;
+	HSAMPLE recoil;
+	HSAMPLE hit_enemy;
+	HSAMPLE hit_player;
 	Mesh* mesh_sphere;
 
 	float load_distance = 200.0f;
 	float no_render_distance = 1000.0f;
 	bool pause;
+	
 
 	//botons
 	Texture* play;
@@ -119,8 +124,10 @@ public:
 
 	//funcions BOSCO & RICCI
 	void loadTexturesAndMeshes();
+	void initAudio();
 	HSAMPLE LoadSample(const char* fileName);
 	void PlayGameSound(HSAMPLE fileSample);
+	void LoadAllSamples();
 	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
 	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
 };
