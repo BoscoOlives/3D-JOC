@@ -38,12 +38,13 @@ Matrix44 Player::getModel() {
     return model;
 }
 
-std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel) {
+std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel, Player* player) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
     Vector3 dir;
+    int random = (rand() % 3) - 1;
     if (enemy)
-        dir = g->player->pos - this->pos; //IDEA: aplicar un petit offset random a nes Vector3 de la posicio del jugador!
+        dir = (player->pos + Vector3(0.01f * random, 0.01f* random, 0.01f* random) - this->pos).normalize(); //Aplciam un petit offset random a nes Vector3 de la posicio del jugador!
     else
         dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     
@@ -53,7 +54,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
     float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER
-    if (!enemy) { float bullet_offset = 0.2;} //si es tracta del Jugador, el offset de on surt la BALA, que sigui mes próxim a la pistola
+    if (!enemy) { bullet_offset = 0.2;} //si es tracta del Jugador, el offset de on surt la BALA, que sigui mes próxim a la pistola
     model.setTranslation(playerModel.getTranslation().x + dir.x* bullet_offset, positionY, playerModel.getTranslation().z+ dir.z * bullet_offset);
 
     model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
@@ -61,6 +62,7 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
     entity_bullet->current_entity = Entity::ENTITY_ID::BULLET;
     entity_bullet->dir = dir;
+    entity_bullet->yaw = this->yaw;
 
     entities.push_back(entity_bullet);
     g->PlayGameSound(g->shoot);
@@ -92,14 +94,14 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 }
 
 
-void Player::AIEnemy(float elapsed_time) {
+void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> bullets, bool cameraLocked) {
     float facingDistance = 9.0f; //distancia la qual ens comença a veure un enemic
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
     Vector3 side = model.rotateVector(Vector3(1, 0, 0)).normalize();
     Vector3 forward = model.rotateVector(Vector3(0, 0, -1)).normalize();
 
-    Vector3 toTarget = g->player->pos - this->pos;
+    Vector3 toTarget = player->pos - this->pos;
     float dist = toTarget.length();
     toTarget.normalize();
 
@@ -108,26 +110,28 @@ void Player::AIEnemy(float elapsed_time) {
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
         if (forwardDot < 0.98f && !collidingWithEntities) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
-            yaw += 90.0f * g->world.sign(sideDot) * elapsed_time*2.0f; //el *2 es perque la rotacio es molta lenta en comparació el desplaçament
+            yaw += 90.0f * g->GetCurrent()->world.sign(sideDot) * elapsed_time*2.0f; //el *2 es perque la rotacio es molta lenta en comparació el desplaçament
         }
         else {
             if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
                 Vector3 playerVel = forward * 1.0f * elapsed_time;
-                this->checkColisions(playerVel, g->entities, elapsed_time, 0.1f); //abans de canviar la posicio mira si colisiona
-                this->checkColisions(playerVel, g->enemies, elapsed_time, 1.0f);
+                this->checkColisions(playerVel, entities, elapsed_time, 0.1f); //abans de canviar la posicio mira si colisiona
+                this->checkColisions(playerVel, enemies, elapsed_time, 1.0f);
 
                 if (this->collidingWithEntities) {
                     pos = pos + Vector3(0.02f, 0.0f, 0.0f);
+
                 }
                 if (this->collidingWithEnemies) { //si hi ha colisio enemic-enemic
                     int random = (rand() % 3)- 1;
                     pos = pos + Vector3(0.01f * random, 0.0f, 0.01f * random); //apliquem desplaçament random entre -1 0 1
                 }
+
             }
             shoot_cooldown += elapsed_time;
             if (shoot_cooldown > 1) {
                 shoot_cooldown = 0.0f;//reiniciem cooldown, cada enemic pot disparar cada 1 segon
-                g->bullets = Shoot(GL_TRIANGLES, g->camera, g->shader, g->cameraLocked, g->bullets, model); //enemics disparen
+                bullets = Shoot(GL_TRIANGLES, g->camera, g->shader, cameraLocked, bullets, model, player); //enemics disparen
             }
         }
         look = true;

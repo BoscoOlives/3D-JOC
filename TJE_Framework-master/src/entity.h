@@ -17,6 +17,7 @@ public:
 	Mesh* mesh;
 	Texture* texture;
 	Vector3 dir;
+	float yaw;
 	std::vector<Animation*> animations;
 
 	enum ENTITY_ID {
@@ -34,7 +35,7 @@ public:
 
 	Entity(Matrix44 model, Mesh* mesh, Texture* texture);
 	void RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cameraLocked, float tiling = 1.0f);
-	void RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look);
+	void RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look, bool slowMotion, bool cameraLocked);
 	void update_position_moving(float elapsed_time, float vel);
 	
 };

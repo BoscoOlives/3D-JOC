@@ -18,54 +18,115 @@
 #include "texture.h"
 #include "input.h"
 #include "pathfinders.h"
+#include "world.h"
+#include "extra/bass.h"	
 
-enum StageID {
+
+enum STAGE_ID {
     INTRO = 0,
     TUTORIAL = 1,
     LEVEL = 2,
-    FINAL = 3
+    FINAL = 3,
+    EDITMODE = 4,
+	MENU = 5
 };
+
 
 class Stage {
 public:
-    virtual StageID GetId() = 0;
-    virtual void Render(Image& framebuffer) = 0;
-    virtual void Update(float elapsed_time) = 0;
+	/*std::vector<Entity*>* entities = &world.entities;
+	std::vector<Entity*>* enemies = &world.enemies;
+	std::vector<Entity*>* bullets = &world.bullets;
+	std::vector<Vector3>* points = &world.points;
+	std::vector<Player*>* player_enemies = &world.player_enemies;*/
+	Entity* player_entity = NULL;
+	World world;
+	Player* player = &world.player;
+	bool cameraLocked;
+	int entityToAdd = Entity::ENTITY_ID::HOUSE;
+	float angle;
+	Matrix44 playerModel;
+
+	float load_distance = 200.0f;
+	float no_render_distance = 1000.0f;
+	bool pause;
+	bool wasLeftMousePressed;
+	bool slowMotion;
+
+	//Stage(); //crec que no hauria de ser necessaria
+    virtual STAGE_ID GetId() = 0;
+    virtual void Render() = 0;
+    virtual void Update(float seconds_elapsed) = 0;
 };
-std::vector<Stage*> stages;
+//std::vector<Stage*> stages;
 
 class Intro : public Stage {
 public:
-    StageID GetId() {return StageID::INTRO; };
-
-    void render();
-    void update();
+    STAGE_ID GetId() {return STAGE_ID::INTRO; };
+    Intro(); //Constructor
+    void Render();
+    void Update(float seconds_elapsed);
 };
 
 class Tutorial : public Stage {
 public:
-    StageID GetId() {return StageID::TUTORIAL; };
+	//Variables
+    static Tutorial*  instance;
+	
 
-    void render();
-    void update();
+    STAGE_ID GetId() {return STAGE_ID::TUTORIAL; };
+    Tutorial();//Constructor
+    void Render();
+    void Update(float seconds_elapsed);
+	void renderSkyGround(Camera* camera);
+
 };
 
 class Level : public Stage {
 public:
-    StageID GetId() {return StageID::LEVEL; };
+    static Tutorial* instance;
 
-    void render();
-    void update();
+    STAGE_ID GetId() {return STAGE_ID::LEVEL; };
+    Level();//Constructor
+    void Render();
+    void Update(float seconds_elapsed);
 };
 
 class Final : public Stage {
 public:
-    StageID GetId() {return StageID::FINAL; };
-
-    void render();
-    void update();
+    STAGE_ID GetId() {return STAGE_ID::FINAL; };
+    Final();//Constructor
+    void Render();
+    void Update(float seconds_elapsed);
 };
 
+class EditMode : public Stage {
+public:
+	//Variables 
+    Entity* selectedEntity = NULL;
+
+	//funcions
+	STAGE_ID GetId() { return STAGE_ID::EDITMODE; };
+    EditMode();//Constructor
+    void Render();
+    void Update(float seconds_elapsed);
+};
+
+class Menu : public Stage {
+public:
+
+	//variables
+	Entity* selectedEntity = NULL;
+
+
+	STAGE_ID GetId() { return STAGE_ID::MENU; };
+	Menu();//Constructor
+	void Render();
+	void Update(float seconds_elapsed);
+	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
+	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+
+};
 
 
 #endif /* stage_h */

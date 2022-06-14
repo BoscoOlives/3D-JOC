@@ -48,10 +48,10 @@ void Entity::update_position_moving(float elapsed_time, float vel) {
     pos = pos + this->dir * vel * elapsed_time;
 
     this->model.setTranslation(pos.x, pos.y, pos.z);
-	this->model.rotate(Game::instance->player->yaw * DEG2RAD, Vector3(0, 1, 0));
+	this->model.rotate(yaw * DEG2RAD, Vector3(0, 1, 0));
 }
 
-void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look) {
+void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vector3 pos, float yaw, bool look, bool slowMotion, bool cameraLocked) {
 	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
@@ -64,7 +64,7 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 	float t = fmod(time, run->duration) / run->duration;
 	idle->assignTime(time);
 	run->assignTime(t* run->duration);
-	if (g->slowMotion) {
+	if (slowMotion) {
 
 		float t = fmod(time, run->duration*2.0f) / run->duration*0.5f;
 		idle->assignTime(time*0.5);
@@ -113,11 +113,7 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 		localToWorldMatrix.translate(-13.0f, 9.0f, 6.0f); //es una tirita, no mola fer-ho així
 
 		Entity* pistol_entity = new Entity(localToWorldMatrix, g->mesh_pistol_e, g->texture_black);
-		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, g->cameraLocked);
-	}
-
-	if (!g->cameraLocked) {
-		mesh->renderBounding(model);
+		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, cameraLocked);
 	}
 
 }

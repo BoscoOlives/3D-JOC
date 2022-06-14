@@ -19,7 +19,7 @@ World::World() {
     //this->player = new Player(0);
 }
 
-void World::saveWorld(std::vector<Entity*> entities, std::vector<Entity*> enemies) {
+void World::saveWorld() {
     //save player, enemies (positions, rotations...)
     printf("Saving World...\n");
     FILE* file = fopen("world.txt", "wb");
@@ -89,14 +89,14 @@ void World::loadWorld() {
 
                 if(entity->current_entity == Entity::ENTITY_ID::ENEMY){
                     
-                    Player* player = new Player((unsigned int)g->enemies.size()); //declarem un nou Player amb el seu ID corresponent
+                    Player* player = new Player((unsigned int)enemies.size()); //declarem un nou Player amb el seu ID corresponent
                     player->pos = model.getTranslation(); //guardem la posicio a partir de la informació de la model
-                    g->player_enemies.push_back(player);//add del enemic a la llista de players
+                    player_enemies.push_back(player);//add del enemic a la llista de players
 
-                    g->enemies.push_back(entity);//add del enemic a la llista de entities
+                    enemies.push_back(entity);//add del enemic a la llista de entities
                 }
                 else{
-                    g->entities.push_back(entity);
+                    entities.push_back(entity);
                 }
                 i = -1;
             }
@@ -158,7 +158,7 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
         Player* player = new Player((unsigned int)entities.size());
         
         player->pos = spawnPos;
-        g->player_enemies.push_back(player);
+        player_enemies.push_back(player);
         
     }
 
@@ -227,7 +227,7 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
      
 }
 
-void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets, Entity*& entityPlayer) {
+void World::shooting_update(Entity*& entityPlayer) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
     for (int i = (int)bullets.size()-1; i >= 0; i--) //bullets.size
@@ -241,7 +241,7 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
             bullets.erase(bullets.begin() + i);
             continue;
         }
-        Vector3 delete_dist = bullet_center - g->player->pos;
+        Vector3 delete_dist = bullet_center - player.pos;
         if (delete_dist.length() > 20.0f) { //si la bala es massa lluny, elimina la bala
             bullets.erase(bullets.begin() + i);
             continue;
@@ -280,7 +280,7 @@ void World::shooting_update(std::vector<Entity*> &entities, std::vector<Entity*>
                     printf("COLLISION BULLET WITH ENEMY\n");
                     g->PlayGameSound(g->hit_enemy);
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
-                    g->player_enemies.erase(g->player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
+                    player_enemies.erase(player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
                     bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
                     continue;
                 }
@@ -315,7 +315,7 @@ void World::creteGrid() {
         map_grid[i] = 1;
     }
 }
-void World::renderPath() {
+void World::renderPath(bool cameraLocked) {
     Game* g = Game::instance;
     //pathfinding
     if (path_steps > 0) {
@@ -330,7 +330,7 @@ void World::renderPath() {
             m.vertices.push_back(pos);
         }
         Entity pathfinding = Entity(Matrix44(), &m, g->texture_black);
-        pathfinding.RenderEntity(GL_LINE_STRIP, g->shader, g->camera, g->cameraLocked);
+        pathfinding.RenderEntity(GL_LINE_STRIP, g->shader, g->camera, cameraLocked);
     }
 }
 float World::sign(float value) {
@@ -338,9 +338,9 @@ float World::sign(float value) {
 }
 void World::restartWorld() {
     Game* g = Game::instance;
-    g->enemies.clear();
-    g->player_enemies.clear();
-    g->entities.clear();
+    enemies.clear();
+    player_enemies.clear();
+    entities.clear();
     loadWorld();
     player.setSpawnPoint();
     

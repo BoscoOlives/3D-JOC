@@ -18,6 +18,7 @@
 #include "shader.h"
 //#include <bass.h>
 #include "extra/bass.h"	
+#include "stage.h"
 
 class Game
 {
@@ -41,21 +42,20 @@ public:
 	bool mouse_locked; //tells if the mouse is locked (not seen)
 
 	//Variables	BOSCO &	RICCI
-	std::vector<Entity*> entities;
+	/*std::vector<Entity*> entities;
 	std::vector<Entity*> enemies;
 	std::vector<Entity*> bullets;
-	std::vector<Vector3> points;
+	std::vector<Vector3> points;*/
+	//std::vector<Player*> player_enemies;
     Entity* selectedEntity = NULL;
-	Entity* player_entity = NULL;
-	World world;
-	Player* player = &world.player;
-	std::vector<Player*> player_enemies;
+	//Entity* player_entity = NULL;
+	//World world;
+	//Player* player = &world.player;
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
-	bool slowMotion;
-	bool cameraLocked;
+	//bool slowMotion;
+	//bool cameraLocked;
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
-	float angle;
 	float mouse_speed;
 	Mesh* mesh_sky = NULL;
 	Mesh* mesh_house = NULL;
@@ -83,7 +83,7 @@ public:
 	Shader* anim_shader = NULL;
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
-	Matrix44 playerModel;
+	//Matrix44 playerModel;
 	Animation* anim_idle;
 	Animation* anim_run;
 	HSAMPLE shoot;
@@ -92,9 +92,9 @@ public:
 	HSAMPLE hit_player;
 	Mesh* mesh_sphere;
 
-	float load_distance = 200.0f;
-	float no_render_distance = 1000.0f;
-	bool pause;
+	//float load_distance = 200.0f;
+	//float no_render_distance = 1000.0f;
+	//bool pause;
 	
 
 	//botons
@@ -104,6 +104,9 @@ public:
 	Texture* exit;
 	Texture* volumeOn;
 	Texture* volumeOff;
+
+	std::vector<Stage*> stages;
+	STAGE_ID currentStage;
     
 
 	Game( int window_width, int window_height, SDL_Window* window );
@@ -128,8 +131,14 @@ public:
 	HSAMPLE LoadSample(const char* fileName);
 	void PlayGameSound(HSAMPLE fileSample);
 	void LoadAllSamples();
-	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
-	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+	//void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
+	//bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+	
+	//funcions Stages
+	void InitStages();
+	Stage* GetStage(STAGE_ID id);
+	Stage* GetCurrent();
+	void SetStage(STAGE_ID id);
 };
 
 

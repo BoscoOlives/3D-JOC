@@ -26,7 +26,11 @@ public:
     /*std::vector<Player*> enemies;
     std::vector<Entity*> entities;*/
     //buildings, stages, scores...
-
+    std::vector<Entity*> entities;
+    std::vector<Entity*> enemies;
+    std::vector<Entity*> bullets;
+    std::vector<Vector3> points;
+    std::vector<Player*> player_enemies;
     //pathfinding
     int start_x;
     int start_y;
@@ -43,7 +47,7 @@ public:
 
     World();
 
-    void saveWorld(std::vector<Entity*> entities, std::vector<Entity*> enemies);
+    void saveWorld();
     void loadWorld();
 
     std::vector<Entity*> AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities);
@@ -51,10 +55,10 @@ public:
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
     std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
-    void shooting_update(std::vector<Entity*> &entities, std::vector<Entity*> &enemies, std::vector<Entity*>& bullets, Entity*& entityPlayer);
+    void shooting_update(Entity*& entityPlayer);
     Vector3 Lerp(Vector3 a, Vector3 b, float t);
     void creteGrid();
-    void renderPath();
+    void renderPath(bool cameraLocked);
     float sign(float value);
     void restartWorld();
 };
