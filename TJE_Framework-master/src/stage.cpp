@@ -16,10 +16,10 @@
 Intro::Intro() {
 	printf("Constructor Intro OK");
 }
-void Intro::Render() {
+void Intro::Render(bool cameraLocked) {
 
 }
-void Intro::Update(float seconds_elapsed) {
+void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
 
@@ -32,17 +32,18 @@ Tutorial::Tutorial() {
 	world.restartWorld();
 
 }
-void Tutorial::Render() {
+void Tutorial::Render(bool cameraLocked) {
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	
-	renderSkyGround(camera);
+	renderSkyGround(camera, cameraLocked);
 
 	playerModel.setTranslation(player->pos.x, player->pos.y, player->pos.z);
 	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 	playerModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
 	if (cameraLocked) {
+		printf("entra cameraLocked render Tutorial\n");
 	
 		Matrix44 camModel = playerModel;
 	
@@ -100,18 +101,16 @@ void Tutorial::Render() {
 	}
 
 }
-void Tutorial::Update(float seconds_elapsed) {
+void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	SDL_ShowCursor(false); //NO mostrem el cursor
+	cameraLocked = true;
 
-	if (Input::wasKeyPressed(SDLK_ESCAPE)) {  // TECLA ESC
-		printf("entra ESC\n");
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
 		g->SetStage(MENU);
 		return; //acabar el update
 	}
-	if (Input::wasKeyPressed(SDLK_TAB)) { // TECLA TAB
-		cameraLocked = !cameraLocked;
-		printf("entra TAB\n");
+	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) { // TECLA TAB
 		g->SetStage(EDITMODE);
 		return; //acaba el update
 	}
@@ -154,7 +153,7 @@ void Tutorial::Update(float seconds_elapsed) {
 
 }
 
-void Tutorial::renderSkyGround(Camera* camera){
+void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
 	Game* g = Game::instance;
 	Matrix44 skyModel;
 	skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
@@ -170,20 +169,20 @@ void Tutorial::renderSkyGround(Camera* camera){
 Level::Level() {
 
 }
-void Level::Render() {
+void Level::Render(bool cameraLocked) {
 
 }
-void Level::Update(float seconds_elapsed) {
+void Level::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
 
 Final::Final() {
 
 }
-void Final::Render() {
+void Final::Render(bool cameraLocked) {
 
 }
-void Final::Update(float seconds_elapsed) {
+void Final::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
 EditMode::EditMode() {
@@ -193,8 +192,10 @@ EditMode::EditMode() {
 	world.creteGrid();
 
 }
-void EditMode::Render() {
+void EditMode::Render(bool cameraLocked) {
+	printf("Render EditMode\n");
 	Game* g = Game::instance;
+
 	std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n + Change Entity to Add\n";
 	drawText(g->window_width - 200, 2, text_edicio, Vector3(1, 1, 1), 2);
 	//Draw the floor grid
@@ -203,20 +204,18 @@ void EditMode::Render() {
 	//Pathfinding
 	//world.renderPath(cameraLocked);
 
-	//Tutorial* tutorial = Tutorial::instance;
-	//tutorial->Render();
 }
-void EditMode::Update(float seconds_elapsed) {
+void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
+	printf("Update EditMode\n");
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	cameraLocked = false;
-	if (Input::wasKeyPressed(SDLK_TAB)) {
-		cameraLocked = !cameraLocked;
+	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
 		g->SetStage(TUTORIAL);
 		return; //acaba el update
 	}
 	float speed = seconds_elapsed * g->mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
-	if ((Input::mouse_state & SDL_BUTTON_LEFT) || g->mouse_locked) //is left button pressed? NO ENTENC PER OR DE MOUSE_LOCKED
+	if ((Input::mouse_state & SDL_BUTTON_LEFT) || g->mouse_locked)
 	{
 		g->camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f, -1.0f, 0.0f));
 		g->camera->rotate(Input::mouse_delta.y * 0.005f, Vector3(-1.0f, 0.0f, 0.0f));
@@ -236,10 +235,9 @@ void EditMode::Update(float seconds_elapsed) {
 Menu::Menu() {
 	wasLeftMousePressed = false;
 }
-void Menu::Render() {
+void Menu::Render(bool cameraLocked) {
 	Game* g = Game::instance;
-	//Render All GUI -----------------------------------
-	
+	//Render All GUI ----------------------------------
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
@@ -247,12 +245,12 @@ void Menu::Render() {
 
 
 	if (RenderButton(g->window_width / 2, 100, 600, 100, g->play)) {
-		cameraLocked = true;
 		g->SetStage(TUTORIAL);
 		printf("Play\n");
 	}
 	else if (RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
 		world.restartWorld();
+		g->SetStage(TUTORIAL);
 		printf("Restart\n");
 	}
 	else if (RenderButton(g->window_width / 2, 300, 600, 100, g->save)) {
@@ -265,9 +263,10 @@ void Menu::Render() {
 	
 	wasLeftMousePressed = false;
 }
-void Menu::Update(float seconds_elapsed) {
-	printf("entra Update Menu\n");
+void Menu::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
+	cameraLocked = true;
+
 	SDL_ShowCursor(true);
 	if (Input::wasKeyPressed(SDLK_ESCAPE)) {
 		g->SetStage(TUTORIAL);

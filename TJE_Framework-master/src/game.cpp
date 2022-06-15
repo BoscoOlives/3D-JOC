@@ -75,7 +75,11 @@ void Game::render(void)
 	glDisable(GL_CULL_FACE);
    
 	camera->enable();
-	GetCurrent()->Render();
+	GetCurrent()->Render(cameraLocked);
+
+	if (currentStage == STAGE_ID::EDITMODE) {
+		GetStage(STAGE_ID::TUTORIAL)->Render(cameraLocked);
+	}
     
 //    
 //    Matrix44 skyModel;
@@ -215,7 +219,8 @@ void Game::render(void)
 
 void Game::update(double seconds_elapsed)
 {
-	GetCurrent()->Update(seconds_elapsed);
+	GetCurrent()->Update(seconds_elapsed, cameraLocked);
+	//printf("%d", currentStage);
     //if (pause) return; //si pausa, sortim de la funci—
     
 	//slowMotion = true;    

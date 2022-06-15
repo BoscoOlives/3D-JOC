@@ -40,7 +40,7 @@ public:
 	//some vars
 	Camera* camera; //our global camera
 	bool mouse_locked; //tells if the mouse is locked (not seen)
-
+	bool cameraLocked;
 	//Variables	BOSCO &	RICCI
 	/*std::vector<Entity*> entities;
 	std::vector<Entity*> enemies;

@@ -42,7 +42,7 @@ public:
 	Entity* player_entity = NULL;
 	World world;
 	Player* player = &world.player;
-	bool cameraLocked;
+	
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	float angle;
 	Matrix44 playerModel;
@@ -55,8 +55,8 @@ public:
 
 	//Stage(); //crec que no hauria de ser necessaria
     virtual STAGE_ID GetId() = 0;
-    virtual void Render() = 0;
-    virtual void Update(float seconds_elapsed) = 0;
+    virtual void Render(bool cameraLocked) = 0;
+    virtual void Update(float seconds_elapsed, bool &cameraLocked) = 0;
 };
 //std::vector<Stage*> stages;
 
@@ -64,8 +64,8 @@ class Intro : public Stage {
 public:
     STAGE_ID GetId() {return STAGE_ID::INTRO; };
     Intro(); //Constructor
-    void Render();
-    void Update(float seconds_elapsed);
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool &cameraLocked);
 };
 
 class Tutorial : public Stage {
@@ -76,9 +76,9 @@ public:
 
     STAGE_ID GetId() {return STAGE_ID::TUTORIAL; };
     Tutorial();//Constructor
-    void Render();
-    void Update(float seconds_elapsed);
-	void renderSkyGround(Camera* camera);
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool &cameraLocked);
+	void renderSkyGround(Camera* camera, bool cameraLocked);
 
 };
 
@@ -88,16 +88,16 @@ public:
 
     STAGE_ID GetId() {return STAGE_ID::LEVEL; };
     Level();//Constructor
-    void Render();
-    void Update(float seconds_elapsed);
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool &cameraLocked);
 };
 
 class Final : public Stage {
 public:
     STAGE_ID GetId() {return STAGE_ID::FINAL; };
     Final();//Constructor
-    void Render();
-    void Update(float seconds_elapsed);
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool &cameraLocked);
 };
 
 class EditMode : public Stage {
@@ -108,8 +108,8 @@ public:
 	//funcions
 	STAGE_ID GetId() { return STAGE_ID::EDITMODE; };
     EditMode();//Constructor
-    void Render();
-    void Update(float seconds_elapsed);
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool &cameraLocked);
 };
 
 class Menu : public Stage {
@@ -121,8 +121,8 @@ public:
 
 	STAGE_ID GetId() { return STAGE_ID::MENU; };
 	Menu();//Constructor
-	void Render();
-	void Update(float seconds_elapsed);
+	void Render(bool cameraLocked);
+	void Update(float seconds_elapsed, bool &cameraLocked);
 	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
 	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
 
