@@ -343,5 +343,4 @@ void World::restartWorld() {
     entities.clear();
     loadWorld();
     player.setSpawnPoint();
-    
 }

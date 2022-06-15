@@ -8,13 +8,13 @@
 
 #include "stage.h"
 #include "game.h"
-
+World Stage::world;
 //Stage::Stage() {
 //
 //}
 
 Intro::Intro() {
-	printf("Constructor Intro OK");
+ 
 }
 void Intro::Render(bool cameraLocked) {
 
@@ -42,9 +42,7 @@ void Tutorial::Render(bool cameraLocked) {
 	playerModel.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 	playerModel.rotate(player->pitch * DEG2RAD, Vector3(1, 0, 0));
 
-	if (cameraLocked) {
-		printf("entra cameraLocked render Tutorial\n");
-	
+	if (cameraLocked) {	
 		Matrix44 camModel = playerModel;
 	
 		Vector3 eye = playerModel * Vector3(0, 0.7, 0.5); //segon valor altura camera
@@ -119,7 +117,17 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	float rotSpeed = 120.0f * g->elapsed_time;
 
 	Input::centerMouse();
+	
 	player->pitch += -Input::mouse_delta.y * 10.0f * g->elapsed_time;
+	
+	if (player->pitch < player->max_pitch.x) {
+		player->pitch = -40.0f;
+	}
+	else if (player->pitch > player->max_pitch.y) {
+		player->pitch = 40.0f;
+	}
+	else {
+	}
 	player->yaw += -Input::mouse_delta.x * 10.0f * g->elapsed_time;
 
 	Matrix44 playerRotation;
@@ -150,7 +158,6 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 		Player* enemy = world.player_enemies[i];
 		enemy->AIEnemy(g->elapsed_time, player, world.entities, world.enemies, world.bullets, cameraLocked);
 	}
-
 }
 
 void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
@@ -193,7 +200,6 @@ EditMode::EditMode() {
 
 }
 void EditMode::Render(bool cameraLocked) {
-	printf("Render EditMode\n");
 	Game* g = Game::instance;
 
 	std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n + Change Entity to Add\n";
@@ -206,7 +212,6 @@ void EditMode::Render(bool cameraLocked) {
 
 }
 void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
-	printf("Update EditMode\n");
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	cameraLocked = false;
@@ -229,7 +234,6 @@ void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
 	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f, 0.0f, 0.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_E)) camera->move(Vector3(0.0f, -1.0f, 0.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
-
 }
 
 Menu::Menu() {

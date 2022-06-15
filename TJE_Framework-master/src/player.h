@@ -21,6 +21,7 @@ public:
     Vector3 pos;
     float yaw;
     float pitch;
+    Vector2 max_pitch;
     bool shooting;
     float gunAngle;
     bool shot;
@@ -38,7 +39,7 @@ public:
     Matrix44 getModel();
     std::vector<Entity*> Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel, Player* player);
     Matrix44 Coil(float elapsed_time, Matrix44 gun);
-    void AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> bullets, bool cameraLocked);
+    void AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> &bullets, bool cameraLocked);
     void checkColisions(Vector3 playerVel, std::vector<Entity*> entities, float elpased_time, float radio_coll);
     void setSpawnPoint();
 };

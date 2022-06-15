@@ -392,11 +392,14 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 	{
 		if (currentStage == STAGE_ID::TUTORIAL) {
 
-			GetCurrent()->wasLeftMousePressed = true;
-			if (!GetCurrent()->player->shot && GetCurrent()->cameraLocked) { //solament pot disparar quan ha acabat la animaci— de disparar
-				GetCurrent()->world.bullets = GetCurrent()->player->Shoot(GL_TRIANGLES, camera, shader, GetCurrent()->cameraLocked, GetCurrent()->world.bullets, GetCurrent()->playerModel,GetCurrent()->player);
+			
+			if (!GetCurrent()->player->shot && cameraLocked) { //solament pot disparar quan ha acabat la animaci— de disparar
+				GetCurrent()->world.bullets = GetCurrent()->player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, GetCurrent()->world.bullets, GetCurrent()->playerModel,GetCurrent()->player);
 				GetCurrent()->player->shot = true;
 			}
+		}
+		if (currentStage == STAGE_ID::MENU) {
+			GetCurrent()->wasLeftMousePressed = true;
 		}
 	}
 }

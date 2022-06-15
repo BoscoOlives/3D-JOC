@@ -28,6 +28,7 @@ Player::Player(unsigned int id) {
     enemy = true;
     this->id = id;
     bullet_offset = 0.5f;
+    max_pitch = { -40.0f, 40.0f };
 
 }
 
@@ -94,7 +95,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 }
 
 
-void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> bullets, bool cameraLocked) {
+void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> &bullets, bool cameraLocked) {
     float facingDistance = 9.0f; //distancia la qual ens comença a veure un enemic
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    

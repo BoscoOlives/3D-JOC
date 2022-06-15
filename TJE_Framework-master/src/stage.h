@@ -34,22 +34,17 @@ enum STAGE_ID {
 
 class Stage {
 public:
-	/*std::vector<Entity*>* entities = &world.entities;
-	std::vector<Entity*>* enemies = &world.enemies;
-	std::vector<Entity*>* bullets = &world.bullets;
-	std::vector<Vector3>* points = &world.points;
-	std::vector<Player*>* player_enemies = &world.player_enemies;*/
+
+    // NOTA: totes les variables que s'han d'emprar a DIFERENTS Stages derivades, s'han de declara Static... (com World)
 	Entity* player_entity = NULL;
-	World world;
+	static World world;
 	Player* player = &world.player;
 	
 	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	float angle;
 	Matrix44 playerModel;
 
-	float load_distance = 200.0f;
-	float no_render_distance = 1000.0f;
-	bool pause;
+	//bool pause;
 	bool wasLeftMousePressed;
 	bool slowMotion;
 
