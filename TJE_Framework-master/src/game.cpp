@@ -300,6 +300,8 @@ void Game::update(double seconds_elapsed)
 //Keyboard event handler (sync input)
 void Game::onKeyDown( SDL_KeyboardEvent event )
 {
+	GetCurrent()->onKeyDown(event);
+
 	//switch(event.keysym.sym)
 	//{
  //       /*case SDLK_ESCAPE: {
@@ -398,6 +400,7 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 				GetCurrent()->player->shot = true;
 			}
 		}
+
 		if (currentStage == STAGE_ID::MENU) {
 			GetCurrent()->wasLeftMousePressed = true;
 		}
@@ -451,8 +454,8 @@ void Game::loadTexturesAndMeshes() {
 	mesh_pistol = Mesh::Get("data/pistol.obj");
 	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
 	
-	mesh_ring = Mesh::Get("data/tanca.obj");
-	texture_ring = Texture::Get("data/tancarParets.png");
+	mesh_rock1 = Mesh::Get("data/rock1.obj");
+	texture_rock1 = Texture::Get("data/rock1.png");
 
 	texture_sky = Texture::Get("data/sky/sky.tga");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");

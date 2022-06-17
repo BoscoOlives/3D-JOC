@@ -28,7 +28,8 @@ Player::Player(unsigned int id) {
     enemy = true;
     this->id = id;
     bullet_offset = 0.5f;
-    max_pitch = { -40.0f, 40.0f };
+    max_pitch.x = -40.0f;
+    max_pitch.y = 40.0f;
 
 }
 
@@ -51,7 +52,6 @@ std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader,
     
     Mesh* mesh_bullet = g->mesh_bullet;
     Matrix44 model;
-    //model.scale(0.01, 0.01, 0.01);
     Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
     float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER

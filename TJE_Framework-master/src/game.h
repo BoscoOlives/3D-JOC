@@ -63,7 +63,7 @@ public:
 	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
 	Mesh* mesh_pistol_e = NULL;
-	Mesh* mesh_ring = NULL;
+	Mesh* mesh_rock1 = NULL;
 	Mesh* mesh_zona0 = NULL;
 	Mesh* mesh_zona1 = NULL;
 	Mesh* mesh_bullet = NULL;
@@ -75,7 +75,7 @@ public:
 	Texture* texture_zona0 = NULL;
 	Texture* texture_zona1 = NULL;
 	Texture* texture_sky = NULL;
-	Texture* texture_ring = NULL;
+	Texture* texture_rock1 = NULL;
 	Texture* texture_wall = NULL;
 	Mesh* mesh_ground = NULL;
 	Texture* texture_ground = NULL;

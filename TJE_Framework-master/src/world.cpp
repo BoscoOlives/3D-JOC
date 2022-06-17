@@ -126,9 +126,9 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
         mesh = g->mesh_cowboy_run;
         texture = g->texture_cowboy;
     }
-    else if (id == Entity::ENTITY_ID::RING) {
-        mesh = g->mesh_ring;
-        texture = g->texture_ring;
+    else if (id == Entity::ENTITY_ID::ROCK1) {
+        mesh = g->mesh_rock1;
+        texture = g->texture_rock1;
     }
     else if (id == Entity::ENTITY_ID::ZONA0) {
         mesh = g->mesh_zona0;
@@ -140,7 +140,7 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
     }
 }
 
-std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities) {
+void World::AddEntityInFront(Camera* cam, Entity::ENTITY_ID entityToAdd) {
     Game* g = Game::instance;
     Mesh* mesh;
     Texture* texture;
@@ -153,37 +153,39 @@ std::vector<Entity*> World::AddEntityInFront(Camera* cam, int entityToAdd, std::
     Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
     Matrix44 model;
     model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
-    if (entityToAdd == 6){
+    if (entityToAdd == Entity::ENTITY_ID::ENEMY){
         model.scale(0.01, 0.01, 0.01);
-        Player* player = new Player((unsigned int)entities.size());
+        Player* player = new Player((unsigned int)enemies.size());
         
         player->pos = spawnPos;
         player_enemies.push_back(player);
-        
+        Entity* entity = new Entity(model, mesh, texture);
+        entity->current_entity = (Entity::ENTITY_ID)entityToAdd;
+
+        enemies.push_back(entity);
     }
+    else {
+        Entity* entity = new Entity(model, mesh, texture);
+        entity->current_entity = (Entity::ENTITY_ID)entityToAdd;
 
-    Entity* entity = new Entity(model, mesh, texture);
-    entity->current_entity = (Entity::ENTITY_ID)entityToAdd;
-
-    entities.push_back(entity);
-    return entities;
+        entities.push_back(entity);
+    }
 }
 
-Entity* World::RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity, float max_ray_dist) {
+Entity* World::RayPick(Camera* cam, Entity* selectedEntity, float max_ray_dist) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
     Vector3 dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     Vector3 rayOrigin = cam->eye;
 
-    for (size_t i = 0; i < entities.size(); i++)
+    for (size_t i = 0; i < this->entities.size(); i++)
     {
-        Entity* entity = entities[i];
+        Entity* entity = this->entities[i];
         Vector3 pos;
         Vector3 normal;
         //testRayCollision(Matrix44 model, Vector3 start, Vector3 front, Vector3& collision, Vector3& normal, float max_ray_dist, bool in_object_space )
         if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal, max_ray_dist)) {
-            //std::cout << "Selected" << std::endl;
-            //points.push_back(pos);
+
             selectedEntity = entity;
             //if (selectedEntity == NULL) printf("selectedEntity NOT WORKING\n");
             printf("selectedEntity\n");
@@ -204,7 +206,7 @@ void World::RotateSelected(float angleDegrees, Entity* selectedEntity)
     printf("rotating %f degrees\n", angleDegrees);
 }
 
-std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities) {
+void World::DeleteEntity(Camera* cam) {
     
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
@@ -219,11 +221,27 @@ std::vector<Entity*> World::DeleteEntity(Camera* cam, std::vector<Vector3> point
         if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
             entities.erase(entities.begin() + i);
             printf("Entity Removed\n");
-            return entities;
+            return;
         }
     }
+
+    for (int i = (int)enemies.size() - 1; i >= 0; i--)
+    {
+        Entity* entity = enemies[i];
+        Vector3 pos;
+        Vector3 normal;
+        Matrix44 current_model;
+        //en cas de ser un enemic, agafem la seva posicio i cap propietat més de la model
+        current_model.setTranslation(entity->model.getTranslation().x, entity->model.getTranslation().y, entity->model.getTranslation().z);
+        if (g->box_col->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
+            enemies.erase(enemies.begin() + i);
+            player_enemies.erase(player_enemies.begin() + i);//si l'esfera col·lisiona, elimina al player enemic
+            printf("Entity Removed\n");
+            return;
+        }
+    }
+
     printf("No Entity Removed\n");
-    return entities;
      
 }
 
@@ -272,7 +290,7 @@ void World::shooting_update(Entity*& entityPlayer) {
                 current_model.setTranslation(currentEnemy->model.getTranslation().x, currentEnemy->model.getTranslation().y, currentEnemy->model.getTranslation().z);
 
                 //comprovam si colisiona el enemic amb la bala
-                currentEnemy->model.scale(2.0, 2.0, 2.0);
+                //currentEnemy->model.scale(2.0, 2.0, 2.0);
                   //g->box_col = MESH de un CUB RECTANGULAR amb les mides d'un enemic, molt millor per comprovar colisions!
                 if (g->box_col->testSphereCollision(current_model, bullet_center, 0.2, coll, collnorm)) {
                 Vector3 pos; Vector3 normal;

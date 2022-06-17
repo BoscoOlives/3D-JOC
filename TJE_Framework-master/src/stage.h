@@ -52,6 +52,7 @@ public:
     virtual STAGE_ID GetId() = 0;
     virtual void Render(bool cameraLocked) = 0;
     virtual void Update(float seconds_elapsed, bool &cameraLocked) = 0;
+    virtual void onKeyDown(SDL_KeyboardEvent event) = 0;
 };
 //std::vector<Stage*> stages;
 
@@ -61,6 +62,7 @@ public:
     Intro(); //Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
+    void onKeyDown(SDL_KeyboardEvent event);
 };
 
 class Tutorial : public Stage {
@@ -74,7 +76,7 @@ public:
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
 	void renderSkyGround(Camera* camera, bool cameraLocked);
-
+    void onKeyDown(SDL_KeyboardEvent event);
 };
 
 class Level : public Stage {
@@ -85,6 +87,7 @@ public:
     Level();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
+    void onKeyDown(SDL_KeyboardEvent event);
 };
 
 class Final : public Stage {
@@ -93,6 +96,7 @@ public:
     Final();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
+    void onKeyDown(SDL_KeyboardEvent event);
 };
 
 class EditMode : public Stage {
@@ -105,6 +109,7 @@ public:
     EditMode();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
+    void onKeyDown(SDL_KeyboardEvent event);
 };
 
 class Menu : public Stage {
@@ -120,6 +125,7 @@ public:
 	void Update(float seconds_elapsed, bool &cameraLocked);
 	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
 	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+    void onKeyDown(SDL_KeyboardEvent event);
 
 };
 

@@ -23,13 +23,11 @@ class World {
 public:
     static World* instance;
     Player player = Player(0);
-    /*std::vector<Player*> enemies;
-    std::vector<Entity*> entities;*/
+
     //buildings, stages, scores...
     std::vector<Entity*> entities;
     std::vector<Entity*> enemies;
     std::vector<Entity*> bullets;
-    std::vector<Vector3> points;
     std::vector<Player*> player_enemies;
     //pathfinding
     int start_x;
@@ -50,10 +48,10 @@ public:
     void saveWorld();
     void loadWorld();
 
-    std::vector<Entity*> AddEntityInFront(Camera* cam, int entityToAdd, std::vector<Entity*> entities);
-    Entity* RayPick(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities, Entity* selectedEntity, float max_ray_dist = 1e+10F);
+    void AddEntityInFront(Camera* cam, Entity::ENTITY_ID entityToAdd);
+    Entity* RayPick(Camera* cam, Entity* selectedEntity, float max_ray_dist = 1e+10F);
     void RotateSelected(float angleDegrees, Entity* selectedEntity);
-    std::vector<Entity*> DeleteEntity(Camera* cam, std::vector<Vector3> points, std::vector<Entity*> entities);
+    void DeleteEntity(Camera* cam);
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
     void shooting_update(Entity*& entityPlayer);
     Vector3 Lerp(Vector3 a, Vector3 b, float t);

@@ -23,7 +23,7 @@ public:
 	enum ENTITY_ID {
 		HOUSE = 0,
 		WALL = 1,
-		RING = 2,
+		ROCK1 = 2,
 		ZONA0 = 3,
 		ZONA1 = 4,
 		BULLET = 5,

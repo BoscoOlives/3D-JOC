@@ -22,12 +22,16 @@ void Intro::Render(bool cameraLocked) {
 void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
+void Intro::onKeyDown(SDL_KeyboardEvent event) {
+
+}
 
 Tutorial::Tutorial() {
 	Game* g = Game::instance;
 	slowMotion = false;
 	player->enemy = false;
 	//CREAR JUGADOR
+	
 	player_entity = new Entity(playerModel, g->mesh_pistol, g->texture_black); //creem la entitat Jugador
 	world.restartWorld();
 
@@ -63,8 +67,8 @@ void Tutorial::Render(bool cameraLocked) {
 	player_entity->model = playerModel;
 	player_entity->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 	//Render de la nostra colisio!
-	/*Entity* box = new Entity(playerModel, box_col, texture_black);
-	box->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
+	/*Entity* box = new Entity(playerModel, g->box_col, g->texture_black);
+	box->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);*/
 
 	//render de totes les entitats (estatiques)
 	for (size_t i = 0; i < world.entities.size(); i++) { //Renderitza totes les entitats que es creen
@@ -79,10 +83,10 @@ void Tutorial::Render(bool cameraLocked) {
 		entity->RenderEntityAnim(GL_TRIANGLES, g->anim_shader, camera, enemy->pos, enemy->yaw, enemy->look, slowMotion,cameraLocked);
 
 		//render Colision BOX ENEMY
-		/*Matrix44 box_model;
+		Matrix44 box_model;
 		box_model.setTranslation(entity->model.getTranslation().x, entity->model.getTranslation().y, entity->model.getTranslation().z);
-		Entity* box = new Entity(box_model, box_col, texture_black);
-		box->RenderEntity(GL_TRIANGLES, shader, camera, cameraLocked);*/
+		Entity* box = new Entity(box_model, g->box_col, g->texture_black);
+		box->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 	}
 
 	//render de totes les bales
@@ -119,15 +123,14 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	Input::centerMouse();
 	
 	player->pitch += -Input::mouse_delta.y * 10.0f * g->elapsed_time;
-	
+
 	if (player->pitch < player->max_pitch.x) {
 		player->pitch = -40.0f;
 	}
 	else if (player->pitch > player->max_pitch.y) {
 		player->pitch = 40.0f;
 	}
-	else {
-	}
+
 	player->yaw += -Input::mouse_delta.x * 10.0f * g->elapsed_time;
 
 	Matrix44 playerRotation;
@@ -172,6 +175,9 @@ void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
 	Entity ground = Entity(groundModel, g->mesh_ground, g->texture_ground);
 	ground.RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 }
+void Tutorial::onKeyDown(SDL_KeyboardEvent event) {
+
+}
 
 Level::Level() {
 
@@ -180,6 +186,9 @@ void Level::Render(bool cameraLocked) {
 
 }
 void Level::Update(float seconds_elapsed, bool &cameraLocked) {
+
+}
+void Level::onKeyDown(SDL_KeyboardEvent event) {
 
 }
 
@@ -192,6 +201,10 @@ void Final::Render(bool cameraLocked) {
 void Final::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
+void Final::onKeyDown(SDL_KeyboardEvent event) {
+
+}
+
 EditMode::EditMode() {
 	Game* g = Game::instance;
 	g->mouse_speed = 100.0f;
@@ -235,6 +248,80 @@ void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
 	if (Input::isKeyPressed(SDL_SCANCODE_E)) camera->move(Vector3(0.0f, -1.0f, 0.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_Q)) camera->move(Vector3(0.0f, 1.0f, 0.0f) * speed);
 }
+void EditMode::onKeyDown(SDL_KeyboardEvent event) {
+	Game* g = Game::instance;
+
+	switch (event.keysym.sym)
+	{
+		case SDLK_ESCAPE: {
+			g->GetStage(MENU);
+			return;
+		}
+	case SDLK_F1: Shader::ReloadAll(); break;
+	case SDLK_1: world.AddEntityInFront(g->camera, Entity::ENTITY_ID::ENEMY); break; //afegir enemic
+	case SDLK_2: world.AddEntityInFront(g->camera, (Entity::ENTITY_ID)entityToAdd); break; //afegir entitats estatiques
+	case SDLK_3: selectedEntity = world.RayPick(g->camera, selectedEntity);
+		if (selectedEntity == NULL) printf("selected entity not saved!\n");
+		break;
+	case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
+	case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
+	case SDLK_6:  world.DeleteEntity(g->camera); break;
+	case SDLK_0: world.saveWorld(); break;
+		//path finding
+	case SDLK_7: {
+		Vector2 mouse = Input::mouse_position;
+		Game* g = Game::instance;
+		Vector3 dir = g->camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
+		Vector3 rayOrigin = g->camera->eye;
+
+		Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+		world.start_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
+		world.start_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
+		//printf("(start_x, start_y) = (%d, %d)\n", start_x, start_y);
+		break;
+	}
+	case SDLK_8: {
+		Vector2 mouse = Input::mouse_position;
+		Game* g = Game::instance;
+		Vector3 dir = g->camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
+		Vector3 rayOrigin = g->camera->eye;
+
+		Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+		world.target_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
+		world.target_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
+
+		//printf("(target_x, target_y) = (%d, %d)\n", target_x, target_y);
+
+
+		world.path_steps = AStarFindPathNoTieDiag(
+			world.start_x, world.start_y, //origin (tienen que ser enteros)
+			world.target_x, world.target_y, //target (tienen que ser enteros)
+			world.map_grid, //pointer to map data
+			world.W, world.H, //map width and height
+			world.output, //pointer where the final path will be stored
+			100); //max supported steps of the final path
+
+	//check if there was a path
+		if (world.path_steps != -1)
+		{
+			for (int i = 0; i < world.path_steps; ++i)
+				std::cout << "X: " << (world.output[i] % world.W) << ", Y: " << floor(world.output[i] / world.W) << std::endl;
+		}
+		else {
+			printf("No paths.\n");
+		}
+
+
+		break;
+	}
+	case SDLK_9: world.loadWorld(); break;
+	case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 5; //canviar enum sense bullet (enum = 5) i el 6 es el enemic
+
+	}
+}
+
+
+
 
 Menu::Menu() {
 	wasLeftMousePressed = false;
@@ -272,10 +359,13 @@ void Menu::Update(float seconds_elapsed, bool &cameraLocked) {
 	cameraLocked = true;
 
 	SDL_ShowCursor(true);
-	if (Input::wasKeyPressed(SDLK_ESCAPE)) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {
 		g->SetStage(TUTORIAL);
 		return; //acaba el update
 	}
+}
+void Menu::onKeyDown(SDL_KeyboardEvent event) {
+
 }
 
 bool Menu::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
@@ -322,3 +412,5 @@ void Menu::RenderGUI(float x, float y, float w, float h, Texture* texture, Vecto
 
 	shader->disable();
 }
+
+
