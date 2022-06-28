@@ -40,35 +40,36 @@ Matrix44 Player::getModel() {
     return model;
 }
 
-std::vector<Entity*> Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, std::vector<Entity*> entities, Matrix44 playerModel, Player* player) {
+void Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLocked, Matrix44 playerModel, Player* player) {
     Vector2 mousePos = Input::mouse_position;
     Game* g = Game::instance;
+    World* w = World::instance;
+    Bullet*& bullet = w->Bullets[w->GetFreeBullet()];
+    
     Vector3 dir;
-    int random = (rand() % 3) - 1;
-    if (enemy)
-        dir = (player->pos + Vector3(0.01f * random, 0.01f* random, 0.01f* random) - this->pos).normalize(); //Aplciam un petit offset random a nes Vector3 de la posicio del jugador!
+    if (enemy) {
+        int random = (rand() % 3) - 1;
+        dir = (player->pos + Vector3(0.01f * random, 0.01f* random, 0.01f* random) - this->pos).normalize(); //Apliquem un petit offset random a nes Vector3 de la posicio del jugador!
+    }
     else
         dir = cam->getRayDirection(mousePos.x, mousePos.y, g->window_width, g->window_height);
     
-    Mesh* mesh_bullet = g->mesh_bullet;
     Matrix44 model;
-    Texture* texture_bullet = g->texture_bullet; //la textura de la bala es tota negra
     
+    bullet->author = this->id;
+    bullet->isActive = true;
     float positionY = this->pos.y + 0.5f; //inicialitzem la posicio de la bala devant del PLAYER
     if (!enemy) { bullet_offset = 0.2;} //si es tracta del Jugador, el offset de on surt la BALA, que sigui mes próxim a la pistola
     model.setTranslation(playerModel.getTranslation().x + dir.x* bullet_offset, positionY, playerModel.getTranslation().z+ dir.z * bullet_offset);
 
     model.rotate(this->yaw * DEG2RAD, Vector3(0, 1, 0));
+    bullet->entity_bullet->model = model;
 
-    Entity* entity_bullet = new Entity(model, mesh_bullet, texture_bullet);
-    entity_bullet->current_entity = Entity::ENTITY_ID::BULLET;
-    entity_bullet->dir = dir;
-    entity_bullet->yaw = this->yaw;
+    bullet->entity_bullet->dir = dir;
+    bullet->entity_bullet->yaw = this->yaw;
 
-    entities.push_back(entity_bullet);
     g->PlayGameSound(g->shoot);
     //g->PlayGameSound(g->recoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
-    return entities;
 }
 
 Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
@@ -95,7 +96,7 @@ Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
 }
 
 
-void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, std::vector<Entity*> &bullets, bool cameraLocked) {
+void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> entities, std::vector<Entity*> enemies, bool cameraLocked) {
     float facingDistance = 9.0f; //distancia la qual ens comença a veure un enemic
     Game* g = Game::instance;
     Matrix44 model = this->getModel();    
@@ -132,7 +133,7 @@ void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> en
             shoot_cooldown += elapsed_time;
             if (shoot_cooldown > 1) {
                 shoot_cooldown = 0.0f;//reiniciem cooldown, cada enemic pot disparar cada 1 segon
-                bullets = Shoot(GL_TRIANGLES, g->camera, g->shader, cameraLocked, bullets, model, player); //enemics disparen
+                Shoot(GL_TRIANGLES, g->camera, g->shader, cameraLocked, model, player); //enemics disparen
             }
         }
         look = true;
@@ -192,17 +193,20 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
             this->collidingWithEntities = true;
 
         }
-        /*float coll_magnitud = sqrt(pow(coll.x, 2) + pow(coll.y, 2) + pow(coll.z, 2));
-        float collnorm_magnitud = sqrt(pow(collnorm.x, 2) + pow(collnorm.y, 2) + pow(collnorm.z, 2));
-        yaw = acos(dot(coll, collnorm) / coll_magnitud * collnorm_magnitud);*/
-
         break;
-        //reflejamos el vector velocidad para que de la sensacion de que rebota en la pared
-        //playerVel = reflect(playerVel, collnorm) * 0.95;
     }
     pos = nexPos;
     
 }
-void Player::setSpawnPoint() {
-    pos = Vector3(-9.0f, 0.0f, 3.0f);
+void Player::setSpawnPoint(int currentLevel) {
+    Vector3 level0 = { -4.0f, 0.0f, -10.5f };
+    Vector3 level1 = { -0.95f, 0.0f, 1.0f };
+
+    std::vector<Vector3> spawnPointsLevels;
+    spawnPointsLevels.push_back(level0);
+    spawnPointsLevels.push_back(level1);
+
+
+    pos = spawnPointsLevels[currentLevel];
+    yaw = 90.0f;
 }

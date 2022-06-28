@@ -20,7 +20,7 @@
 #include "pathfinders.h"
 #include "world.h"
 #include "extra/bass.h"	
-
+#include "bullet.h"
 
 enum STAGE_ID {
     INTRO = 0,
@@ -38,9 +38,13 @@ public:
     // NOTA: totes les variables que s'han d'emprar a DIFERENTS Stages derivades, s'han de declara Static... (com World)
 	Entity* player_entity = NULL;
 	static World world;
+    static std::vector<char*> levelsWorld;
+    static std::vector<char*> levelsEnemies;
+    static int currentLevel;
+
+
 	Player* player = &world.player;
-	
-	int entityToAdd = Entity::ENTITY_ID::HOUSE;
+	int entityToAdd = Entity::ENTITY_ID::BARREL;
 	float angle;
 	Matrix44 playerModel;
 
@@ -54,7 +58,6 @@ public:
     virtual void Update(float seconds_elapsed, bool &cameraLocked) = 0;
     virtual void onKeyDown(SDL_KeyboardEvent event) = 0;
 };
-//std::vector<Stage*> stages;
 
 class Intro : public Stage {
 public:
@@ -70,7 +73,6 @@ public:
 	//Variables
     static Tutorial*  instance;
 	
-
     STAGE_ID GetId() {return STAGE_ID::TUTORIAL; };
     Tutorial();//Constructor
     void Render(bool cameraLocked);

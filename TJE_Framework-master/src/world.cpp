@@ -11,36 +11,21 @@
 #include <iostream>
 #include <fstream>
 
+
 World* World::instance = NULL;
+
 
 World::World() {
     instance = this;   
-    player.setSpawnPoint();
-    //this->player = new Player(0);
+    printf("Constructor WORLD\n");
+    
 }
 
-void World::saveWorld() {
+void World::saveEnemies(char* path) {
     //save player, enemies (positions, rotations...)
-    printf("Saving World...\n");
-    FILE* file = fopen("world.txt", "wb");
-    for (size_t i = 0; i < entities.size(); i++)
-    {
-        Entity* entity = entities[i];
-        Matrix44 model = entity->model;
-
-        if (entity->current_entity != Entity::ENTITY_ID::BULLET) {
-            std::string str = { 
-            std::to_string(entity->current_entity) + "\n" +
-            std::to_string(model._11) + "\n" + std::to_string(model._12) + "\n" + std::to_string(model._13) + "\n" + std::to_string(model._14) + "\n" +
-            std::to_string(model._21) + "\n" + std::to_string(model._22) + "\n" + std::to_string(model._23) + "\n" + std::to_string(model._24) + "\n" +
-            std::to_string(model._31) + "\n" + std::to_string(model._32) + "\n" + std::to_string(model._33) + "\n" + std::to_string(model._34) + "\n" +
-            std::to_string(model._41) + "\n" + std::to_string(model._42) + "\n" + std::to_string(model._43) + "\n" + std::to_string(model._44) + "\n" };
-
-            const char* buffer = str.c_str();
-
-            fwrite(buffer, sizeof(char), strlen(buffer), file);
-        }
-    }
+    printf("Saving Enemies in World...\n");
+    FILE* file = fopen(path, "wb");
+    
     for (size_t i = 0; i < enemies.size(); i++)
     {
         Entity* entity = enemies[i];
@@ -61,14 +46,14 @@ void World::saveWorld() {
     }
     fclose(file);
 }
-void World::loadWorld() {
+void World::loadEnemies(char* path) {
     //load player, enemies (positions, rotations...)
     Game* g = Game::instance;
     Mesh* mesh;
     Texture* texture;
     int id;
     std::string line;
-    std::ifstream myfile("world.txt");
+    std::ifstream myfile(path);
 
     Matrix44 model;
     if (myfile.is_open())
@@ -89,10 +74,9 @@ void World::loadWorld() {
 
                 if(entity->current_entity == Entity::ENTITY_ID::ENEMY){
                     
-                    Player* player = new Player((unsigned int)enemies.size()); //declarem un nou Player amb el seu ID corresponent
+                    Player* player = new Player((unsigned int)enemies.size()+1); //declarem un nou Player amb el seu ID corresponent (ID enemics 1,2,..,n)
                     player->pos = model.getTranslation(); //guardem la posicio a partir de la informació de la model
                     player_enemies.push_back(player);//add del enemic a la llista de players
-
                     enemies.push_back(entity);//add del enemic a la llista de entities
                 }
                 else{
@@ -100,27 +84,65 @@ void World::loadWorld() {
                 }
                 i = -1;
             }
-            std::cout << line << "\n";
+            //std::cout << line << "\n";
             i = i+1;
         }
         myfile.close();
     }
     else std::cout << "Unable to open file";
 
-    printf("\nLoading World...\n");
+    printf("\nLoading Enemies...\n");
 
 }
+
+void World::loadWorld(char* path) {
+    std::string STR = "";
+    readFile(path, STR);
+    std::stringstream ss(STR);
+
+    while (!ss.eof()) {
+        std::string mPath;
+        std::string tPath;
+        ss >> mPath;
+        ss >> tPath;
+
+        //const char* meshPathChar = &mPath[0];
+        //+-const char* texturePathChar = &tPath[0];
+
+        Matrix44 model;
+        for (size_t i = 0; i < 16; i++)
+        {
+            ss >> model.m[i];
+            if (ss.peek() == ',') ss.ignore();
+        }
+
+        Mesh* mesh = Mesh::Get(&mPath[0]);
+        Texture* texture = Texture::Get(&tPath[0]);
+        
+        Entity* entity = new Entity(model, mesh, texture);
+        entities.push_back(entity);
+
+    }
+    
+}
+
+
 
 void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//funció per obtenir la mesh i la texture depenent de la ID
     Game* g = Game::instance;
 
-    if (id == Entity::ENTITY_ID::HOUSE) {
-        mesh = g->mesh_house;
-        texture = g->texture_black;
+
+    if (id == Entity::ENTITY_ID::BARREL) {
+        mesh = g->mesh_barrel;
+        texture = g->texture_barrel;
     }
-    else if (id == Entity::ENTITY_ID::WALL) {
-        mesh = g->mesh_wall;
-        texture = g->texture_wall;
+    else if (id == Entity::ENTITY_ID::CONSOLE) {
+        mesh = g->mesh_consoleScreen;
+        texture = g->texture_consoleScreen;
+    }
+    else if (id == Entity::ENTITY_ID::SUPPORT) {
+        mesh = g->mesh_SupportCorner;
+        texture = g->texture_SupportCorner;
     }
     else if (id == Entity::ENTITY_ID::ENEMY) {
         mesh = g->mesh_cowboy_run;
@@ -129,14 +151,6 @@ void World::get_Mesh_Texture_Entity(int id, Mesh* &mesh, Texture* &texture) {//f
     else if (id == Entity::ENTITY_ID::ROCK1) {
         mesh = g->mesh_rock1;
         texture = g->texture_rock1;
-    }
-    else if (id == Entity::ENTITY_ID::ZONA0) {
-        mesh = g->mesh_zona0;
-        texture = g->texture_zona0;
-    }
-    else if (id == Entity::ENTITY_ID::ZONA1) {
-        mesh = g->mesh_zona1;
-        texture = g->texture_zona1;
     }
 }
 
@@ -155,8 +169,7 @@ void World::AddEntityInFront(Camera* cam, Entity::ENTITY_ID entityToAdd) {
     model.translate(spawnPos.x, spawnPos.y, spawnPos.z);
     if (entityToAdd == Entity::ENTITY_ID::ENEMY){
         model.scale(0.01, 0.01, 0.01);
-        Player* player = new Player((unsigned int)enemies.size());
-        
+        Player* player = new Player((unsigned int)enemies.size()+1);
         player->pos = spawnPos;
         player_enemies.push_back(player);
         Entity* entity = new Entity(model, mesh, texture);
@@ -216,11 +229,12 @@ void World::DeleteEntity(Camera* cam) {
     for (int i = (int)entities.size() - 1; i >= 0; i--)
     {
         Entity* entity = entities[i];
-        Vector3 pos;
-        Vector3 normal;
+            Vector3 pos;
+            Vector3 normal;
         if (entity->mesh->testRayCollision(entity->model, rayOrigin, dir, pos, normal)) {
             entities.erase(entities.begin() + i);
             printf("Entity Removed\n");
+            printf("ID: %d\n", i+1);    //es correspona  la linia del txt de carga de mapa!
             return;
         }
     }
@@ -245,23 +259,29 @@ void World::DeleteEntity(Camera* cam) {
      
 }
 
-void World::shooting_update(Entity*& entityPlayer) {
+void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorld, std::vector<char*> levelsEnemies, int currentLevel) {
     // FOR LOOP PER FER UPDATE DE LA POSICIÓ DE LA BALA
     Game* g = Game::instance;
-    for (int i = (int)bullets.size()-1; i >= 0; i--) //bullets.size
+    for (size_t i = 0; i < numBullets; i++) //bullets.size
     {
-        Entity* entity = bullets[i]; // cercam les BULLETS
+        Bullet*& currentBullet = Bullets[i];
+        if (!currentBullet->isActive) {
+            continue;
+        }
+        Entity* entity = currentBullet->entity_bullet; // cercam les BULLETS
         float vel = 5.0f;
         entity->update_position_moving(g->elapsed_time, vel);
             
         Vector3 bullet_center = entity->model.getTranslation();
         if (bullet_center.y < 0.0f) { //si la bala atravessa el terra, elimina la bala
-            bullets.erase(bullets.begin() + i);
+            currentBullet->isActive = false;
+            //bullets.erase(bullets.begin() + i);
             continue;
         }
         Vector3 delete_dist = bullet_center - player.pos;
         if (delete_dist.length() > 20.0f) { //si la bala es massa lluny, elimina la bala
-            bullets.erase(bullets.begin() + i);
+            currentBullet->isActive = false;
+            //bullets.erase(bullets.begin() + i);
             continue;
         }
 
@@ -270,16 +290,17 @@ void World::shooting_update(Entity*& entityPlayer) {
             Entity* currentEntity = entities[j]; //cercam entitats
             Vector3 coll;
             Vector3 collnorm;
-            //comprovam si colisiona  la entitat amb la bala
+            //comprovam si colisiona la entitat amb la bala
             if (currentEntity->mesh->testSphereCollision(currentEntity->model, bullet_center, 0.1, coll, collnorm)) {
-                printf("COLLISION BULLET WITH ENTITY\n");
-                bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+                //printf("COLLISION BULLET WITH ENTITY\n");
+                currentBullet->isActive = false;//si la bala col·lisiona amb una entitat estatica (parets..), elimina la bala
                 continue;
             }
         }
         for (int j = (int)enemies.size() - 1; j >= 0; j--)
         {
             Entity* currentEnemy = enemies[j]; //cercam enemics
+            Player* currentEnemyPlayer = player_enemies[j];
 
             if (currentEnemy->current_entity == Entity::ENTITY_ID::ENEMY) { //no faria falta el if, pero es per assegurar que es tracta de un enemic
                 Vector3 coll;
@@ -290,16 +311,15 @@ void World::shooting_update(Entity*& entityPlayer) {
                 current_model.setTranslation(currentEnemy->model.getTranslation().x, currentEnemy->model.getTranslation().y, currentEnemy->model.getTranslation().z);
 
                 //comprovam si colisiona el enemic amb la bala
-                //currentEnemy->model.scale(2.0, 2.0, 2.0);
                   //g->box_col = MESH de un CUB RECTANGULAR amb les mides d'un enemic, molt millor per comprovar colisions!
-                if (g->box_col->testSphereCollision(current_model, bullet_center, 0.2, coll, collnorm)) {
+                if (g->box_col->testSphereCollision(current_model, bullet_center, 0.2, coll, collnorm ) && currentBullet->author != currentEnemyPlayer->id) {
                 Vector3 pos; Vector3 normal;
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
-                    printf("COLLISION BULLET WITH ENEMY\n");
+                    //printf("COLLISION BULLET WITH ENEMY\n");
                     g->PlayGameSound(g->hit_enemy);
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                     player_enemies.erase(player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
-                    bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
+                    currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
                     continue;
                 }
             }
@@ -307,12 +327,11 @@ void World::shooting_update(Entity*& entityPlayer) {
         //Check colisions BALA vs JUGADOR
         Vector3 coll;
         Vector3 collnorm;
-        //en cas de ser un enemic, agafem la seva posicio i cap propietat més de la model
-        if (g->box_col->testSphereCollision(entityPlayer->model, bullet_center, 0.1, coll, collnorm)) {
+        if (g->box_col->testSphereCollision(entityPlayer->model, bullet_center, 0.1, coll, collnorm ) && currentBullet->author != player.id) {
             printf("YOU DIE!\n");
             g->PlayGameSound(g->hit_player);
-            bullets.erase(bullets.begin() + i);//si la bala col·lisiona, elimina la bala
-            restartWorld(); //reset del WORLD
+            currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
+            restartWorld(levelsWorld, levelsEnemies, currentLevel); //reset del level
             continue;
         }
 
@@ -354,11 +373,55 @@ void World::renderPath(bool cameraLocked) {
 float World::sign(float value) {
     return value >= 0.0f ? 1.0f : -1.0f;
 }
-void World::restartWorld() {
-    Game* g = Game::instance;
+void World::restartWorld(std::vector<char*> levelsWorld, std::vector<char*> levelsEnemies, int currentLevel) {
+    Game* g = Game::instance; 
+
+    char* pathW = levelsWorld[currentLevel];
+    char* pathE = levelsEnemies[currentLevel];
+
     enemies.clear();
     player_enemies.clear();
     entities.clear();
-    loadWorld();
-    player.setSpawnPoint();
+    
+    loadWorld(pathW);
+    loadEnemies(pathE);
+    player.setSpawnPoint(currentLevel);
+}
+
+int World::GetFreeBullet() {
+    for (size_t i = 0; i < numBullets; i++)
+    {
+        Bullet* currentBullet = Bullets[i];
+        if (!currentBullet->isActive) {
+            return i;
+        }
+    }
+    return -1;
+}
+void World::RenderBullets(Camera* cam, Shader* shader, bool cameraLocked) {
+    for (size_t i = 0; i < numBullets; i++) { //Renderitza totes les bales que es creen
+        Bullet*& currentBullet = Bullets[i];
+
+        if (currentBullet->isActive == false) {
+            continue;
+        }
+        Entity* entity = currentBullet->entity_bullet;
+        currentBullet->entity_bullet->RenderEntity(GL_TRIANGLES, shader, cam, cameraLocked); //NOTA AQUI NO SA ESTA PINTANT
+
+    }
+}
+
+void World::InitBullets(Mesh* mesh, Texture* texture) {
+
+    for (size_t i = 0; i < numBullets; i++)
+    {
+        Bullets.push_back(new Bullet(Matrix44(), mesh, texture));
+    }
+}
+
+bool World::checkEnemies() {
+    if (enemies.size() == 0) {
+        return true;
+    }
+    return false;
 }

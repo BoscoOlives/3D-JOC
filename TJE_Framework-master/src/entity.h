@@ -21,13 +21,12 @@ public:
 	std::vector<Animation*> animations;
 
 	enum ENTITY_ID {
-		HOUSE = 0,
-		WALL = 1,
-		ROCK1 = 2,
-		ZONA0 = 3,
-		ZONA1 = 4,
-		BULLET = 5,
-		ENEMY = 6
+		BARREL = 0,
+		CONSOLE = 1,
+		SUPPORT = 2,
+		ROCK1 = 3,
+		BULLET = 4,
+		ENEMY = 5
 	};
 
 	ENTITY_ID current_entity;

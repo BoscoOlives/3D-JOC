@@ -19,6 +19,9 @@
 //#include <bass.h>
 #include "extra/bass.h"	
 #include "stage.h"
+#include "bullet.h"
+#include "light.h"
+
 
 class Game
 {
@@ -55,17 +58,11 @@ public:
 	Texture* texture_white = NULL;
 	//bool slowMotion;
 	//bool cameraLocked;
-	int entityToAdd = Entity::ENTITY_ID::HOUSE;
 	float mouse_speed;
 	Mesh* mesh_sky = NULL;
-	Mesh* mesh_house = NULL;
-	Mesh* mesh_wall = NULL;
-	Mesh* mesh_man = NULL;
 	Mesh* mesh_pistol = NULL;
 	Mesh* mesh_pistol_e = NULL;
 	Mesh* mesh_rock1 = NULL;
-	Mesh* mesh_zona0 = NULL;
-	Mesh* mesh_zona1 = NULL;
 	Mesh* mesh_bullet = NULL;
 	Mesh* mesh_cowboy_idle = NULL;
 	Mesh* mesh_cowboy_run = NULL;
@@ -76,7 +73,8 @@ public:
 	Texture* texture_zona1 = NULL;
 	Texture* texture_sky = NULL;
 	Texture* texture_rock1 = NULL;
-	Texture* texture_wall = NULL;
+	Texture* texture_pistol = NULL;
+
 	Mesh* mesh_ground = NULL;
 	Texture* texture_ground = NULL;
 	Shader* shader = NULL;
@@ -91,11 +89,21 @@ public:
 	HSAMPLE hit_enemy;
 	HSAMPLE hit_player;
 	Mesh* mesh_sphere;
+	//iluminacio
+	Shader* phong_shader = NULL;
+	Light* light = NULL;
 
-	//float load_distance = 200.0f;
-	//float no_render_distance = 1000.0f;
-	//bool pause;
-	
+	//meshes per carregar in game
+	Mesh* mesh_barrel = NULL;
+	Mesh* mesh_consoleScreen = NULL;
+	Mesh* mesh_SupportCorner = NULL;
+	Texture* texture_barrel = NULL;
+	Texture* texture_consoleScreen = NULL;
+	Texture* texture_SupportCorner = NULL;
+
+
+
+
 
 	//botons
 	Texture* play;

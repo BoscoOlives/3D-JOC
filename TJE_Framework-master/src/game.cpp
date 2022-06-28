@@ -45,6 +45,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//inicialitzar part d'audio
 	initAudio();
 	LoadAllSamples(); //carregam tots els audios
+	printf("ALL LOADS OK!\n");
 	
 	//player->enemy = false; //FET
 	////CREAR JUGADOR
@@ -54,8 +55,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	InitStages();
 	currentStage = STAGE_ID::TUTORIAL;
+	GetCurrent()->world.InitBullets(mesh_bullet, texture_bullet);
 
-	
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
@@ -73,13 +74,14 @@ void Game::render(void)
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
+
    
 	camera->enable();
-	GetCurrent()->Render(cameraLocked);
-
 	if (currentStage == STAGE_ID::EDITMODE) {
 		GetStage(STAGE_ID::TUTORIAL)->Render(cameraLocked);
 	}
+	GetCurrent()->Render(cameraLocked);
+
     
 //    
 //    Matrix44 skyModel;
@@ -395,8 +397,8 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 		if (currentStage == STAGE_ID::TUTORIAL) {
 
 			
-			if (!GetCurrent()->player->shot && cameraLocked) { //solament pot disparar quan ha acabat la animaci— de disparar
-				GetCurrent()->world.bullets = GetCurrent()->player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, GetCurrent()->world.bullets, GetCurrent()->playerModel,GetCurrent()->player);
+			if (!GetCurrent()->player->shot && cameraLocked) { //solament pot disparar quan ha acabat la animaci— de disparar				
+				GetCurrent()->player->Shoot(GL_TRIANGLES, camera, shader, cameraLocked, GetCurrent()->playerModel,GetCurrent()->player);
 				GetCurrent()->player->shot = true;
 			}
 		}
@@ -441,33 +443,30 @@ void Game::loadTexturesAndMeshes() {
 	mesh_sphere = Mesh::Get("data/sphere.obj");
 
 	mesh_ground = new Mesh();
-	mesh_ground->createPlane(80);
-	texture_ground = Texture::Get("data/ground-mosaic.png");
-
-	mesh_house = Mesh::Get("data/bar-tropic_0.obj");
-
-	mesh_wall = Mesh::Get("data/wall.obj");
-	texture_wall = Texture::Get("data/wall.png");
-
-	mesh_man = Mesh::Get("data/man.obj");
+	mesh_ground->createPlane(30);
+	texture_ground = Texture::Get("data/ground.png");
 	
 	mesh_pistol = Mesh::Get("data/pistol.obj");
+
 	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
-	
-	mesh_rock1 = Mesh::Get("data/rock1.obj");
-	texture_rock1 = Texture::Get("data/rock1.png");
+	texture_pistol  = Texture::Get("data/color-atlas-new.png");
 
 	texture_sky = Texture::Get("data/sky/sky.tga");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");
 
-	mesh_zona0 = Mesh::Get("data/first_level.obj");
-	texture_zona0 = Texture::Get("data/first_level.png");
-
-	mesh_zona1 = Mesh::Get("data/zona_1.obj");
-	texture_zona1 = Texture::Get("data/zona_1.png");
 	
 	mesh_bullet = Mesh::Get("data/bullet_hack.obj");
 	texture_bullet = Texture::Get("data/bullet_hack.png");
+
+	//meshes per carregar in game
+	mesh_rock1 = Mesh::Get("data/rock1.obj");
+	texture_rock1 = Texture::Get("data/rock1.png");
+	mesh_barrel = Mesh::Get("data/levels/obj_scene/barrel.obj");
+	mesh_consoleScreen = Mesh::Get("data/levels/obj_scene/consoleScreen.obj");
+	mesh_SupportCorner = Mesh::Get("data/levels/obj_scene/SupportCorner.obj");
+	texture_barrel = Texture::Get("data/levels/obj_scene/barrel.png");
+	texture_consoleScreen = Texture::Get("data/levels/obj_scene/consoleScreen.png");
+	texture_SupportCorner = Texture::Get("data/levels/obj_scene/SupportCorner.png");
 
 	//imports d'arxius d'animació
 	mesh_cowboy_run = Mesh::Get("data/animation/cowboy_run.mesh");
@@ -477,9 +476,14 @@ void Game::loadTexturesAndMeshes() {
 	anim_idle = Animation::Get("data/animation/cowboy_idle.skanim");
 	box_col = Mesh::Get("data/box_colision_enemy.obj");
 
-	// example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	anim_shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
+	//we load a shader
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+
+	light = new Light();
+	light->calcKaia();
+
+	anim_shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/phong.fs");
 
 
 	

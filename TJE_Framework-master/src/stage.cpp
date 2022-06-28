@@ -5,10 +5,13 @@
 //  Created by Josep Ricci on 10/6/22.
 //  Copyright © 2022 Josep Ricci. All rights reserved.
 //
-
 #include "stage.h"
-#include "game.h"
+#include "Game.h"
+
 World Stage::world;
+std::vector<char*> Stage::levelsWorld;
+std::vector<char*> Stage::levelsEnemies;
+int Stage::currentLevel;
 //Stage::Stage() {
 //
 //}
@@ -31,9 +34,22 @@ Tutorial::Tutorial() {
 	slowMotion = false;
 	player->enemy = false;
 	//CREAR JUGADOR
+	player_entity = new Entity(playerModel, g->mesh_pistol, g->texture_pistol); //creem la entitat Jugador
+	currentLevel = 0;
+	//char* path_level_0 = "world_scene0.txt";
+	//char* path_level_1 = "world_scene1.txt";
+	levelsWorld.reserve(2);
+	levelsWorld.push_back("world_scene0.txt");
+	levelsWorld.push_back("world_scene1.txt");
+
+	//char* path_level_0 = "enemies0.txt";
+	//char* path_level_1 = "enemies1.txt";
+	levelsEnemies.reserve(2);
+	levelsEnemies.push_back("enemies0.txt");
+	levelsEnemies.push_back("enemies1.txt");
 	
-	player_entity = new Entity(playerModel, g->mesh_pistol, g->texture_black); //creem la entitat Jugador
-	world.restartWorld();
+	world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+
 
 }
 void Tutorial::Render(bool cameraLocked) {
@@ -63,7 +79,7 @@ void Tutorial::Render(bool cameraLocked) {
 
 	}
 
-	//CREAR JUGADOR
+	//RENDER JUGADOR
 	player_entity->model = playerModel;
 	player_entity->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 	//Render de la nostra colisio!
@@ -73,6 +89,7 @@ void Tutorial::Render(bool cameraLocked) {
 	//render de totes les entitats (estatiques)
 	for (size_t i = 0; i < world.entities.size(); i++) { //Renderitza totes les entitats que es creen
 		Entity* entity = world.entities[i];
+		//g->light->illumination(g->shader, camera);
 		entity->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 	}
 
@@ -83,17 +100,17 @@ void Tutorial::Render(bool cameraLocked) {
 		entity->RenderEntityAnim(GL_TRIANGLES, g->anim_shader, camera, enemy->pos, enemy->yaw, enemy->look, slowMotion,cameraLocked);
 
 		//render Colision BOX ENEMY
-		Matrix44 box_model;
+		/*Matrix44 box_model;
 		box_model.setTranslation(entity->model.getTranslation().x, entity->model.getTranslation().y, entity->model.getTranslation().z);
 		Entity* box = new Entity(box_model, g->box_col, g->texture_black);
-		box->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
+		box->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);*/
 	}
 
 	//render de totes les bales
-	for (size_t i = 0; i < world.bullets.size(); i++) { //Renderitza totes les bales que es creen
-		Entity* entity = world.bullets[i];
-		entity->RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
-	}
+	world.RenderBullets(camera, g->shader, cameraLocked);
+
+	
+
 	if (cameraLocked) {//TEXT TECLES MODE GAMEPLAY
 		std::string text_gameplay = "LeftMouse Shot\nWASD Move Player\nMouse Move Camera\n ESC Menu\n";
 		drawText(g->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
@@ -107,14 +124,21 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	SDL_ShowCursor(false); //NO mostrem el cursor
 	cameraLocked = true;
-
 	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
 		g->SetStage(MENU);
 		return; //acabar el update
 	}
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) { // TECLA TAB
 		g->SetStage(EDITMODE);
-		return; //acaba el update
+		return;
+	}
+	
+	//printf("%d", world.entities.size());
+	
+	if (world.checkEnemies()) { // si ja no hi ha enemics, 
+		currentLevel += 1;
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		return;
 	}
 	slowMotion = true;
 	float playerSpeed = 2.5f * g->elapsed_time;
@@ -132,7 +156,6 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	}
 
 	player->yaw += -Input::mouse_delta.x * 10.0f * g->elapsed_time;
-
 	Matrix44 playerRotation;
 	playerRotation.rotate(player->yaw * DEG2RAD, Vector3(0, 1, 0));
 
@@ -155,25 +178,44 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	
 
 	//update bala de la posicio i si colisiona amb enemics o parets
-	world.shooting_update(player_entity);
+	world.shooting_update(player_entity, levelsWorld, levelsEnemies, currentLevel);
 	//AI ENEMIES - Canvi de posicio dels enemics  + comprovar colisions enemics
 	for (size_t i = 0; i < world.player_enemies.size(); i++) {
 		Player* enemy = world.player_enemies[i];
-		enemy->AIEnemy(g->elapsed_time, player, world.entities, world.enemies, world.bullets, cameraLocked);
+		enemy->AIEnemy(g->elapsed_time, player, world.entities, world.enemies, cameraLocked);
 	}
 }
 
 void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
 	Game* g = Game::instance;
 	Matrix44 skyModel;
+	skyModel.scale(0.1f, 0.1f, 0.1f);
 	skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
 	Entity background = Entity(skyModel, g->mesh_sky, g->texture_sky);
 	glDisable(GL_DEPTH_TEST); //desactivem el DEPTH TEST abans de redenritzar el fons perque no es superposi devant entitats
 	background.RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
 	glEnable(GL_DEPTH_TEST);
 	Matrix44 groundModel;
-	Entity ground = Entity(groundModel, g->mesh_ground, g->texture_ground);
-	ground.RenderEntity(GL_TRIANGLES, g->shader, camera, cameraLocked);
+
+	//Render Sky (solament per ell)
+	//enable shader
+	g->shader->enable();
+	//upload uniforms
+	g->shader->setUniform("u_color", Vector4(1, 1, 1, 1));
+	g->shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+	if (g->texture_ground != NULL) {
+		g->shader->setUniform("u_texture", g->texture_ground, 0);
+	}
+	g->shader->setUniform("u_time", g->time);
+	//g->shader->setUniform("u_tex_tiling", tiling);
+	g->shader->setUniform("u_model", groundModel);
+	g->mesh_ground->render(GL_TRIANGLES);
+	g->shader->disable();
+	if (!cameraLocked) {
+		g->mesh_ground->renderBounding(groundModel);
+	}
+
+
 }
 void Tutorial::onKeyDown(SDL_KeyboardEvent event) {
 
@@ -189,7 +231,7 @@ void Level::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
 void Level::onKeyDown(SDL_KeyboardEvent event) {
-
+	
 }
 
 Final::Final() {
@@ -202,14 +244,14 @@ void Final::Update(float seconds_elapsed, bool &cameraLocked) {
 
 }
 void Final::onKeyDown(SDL_KeyboardEvent event) {
-
+	
 }
 
 EditMode::EditMode() {
 	Game* g = Game::instance;
 	g->mouse_speed = 100.0f;
 	//pathfinding
-	world.creteGrid();
+	//world.creteGrid();
 
 }
 void EditMode::Render(bool cameraLocked) {
@@ -217,17 +259,21 @@ void EditMode::Render(bool cameraLocked) {
 
 	std::string text_edicio = "F1 Reload All\n 0 Save World\n 2 Add Entity\n 3 Select Entity\n 4 Rotate <-\n 5 Rotate ->\n 6 Remove Entity\n 9 Load World\n + Change Entity to Add\n";
 	drawText(g->window_width - 200, 2, text_edicio, Vector3(1, 1, 1), 2);
+	std::string pos = "POS: " + to_string(g->camera->eye.x) + to_string(g->camera->eye.z) + to_string(g->camera->eye.z);
+	drawText(2, g->window_height-100, pos, Vector3(1, 1, 1), 2);
+	
 	//Draw the floor grid
 	drawGrid();
 
 	//Pathfinding
-	//world.renderPath(cameraLocked);
+	world.renderPath(cameraLocked);
 
 }
 void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	cameraLocked = false;
+	
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
 		g->SetStage(TUTORIAL);
 		return; //acaba el update
@@ -253,10 +299,10 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 
 	switch (event.keysym.sym)
 	{
-		case SDLK_ESCAPE: {
-			g->GetStage(MENU);
-			return;
-		}
+	case SDLK_ESCAPE: {
+		g->GetStage(MENU);
+		return;
+	}
 	case SDLK_F1: Shader::ReloadAll(); break;
 	case SDLK_1: world.AddEntityInFront(g->camera, Entity::ENTITY_ID::ENEMY); break; //afegir enemic
 	case SDLK_2: world.AddEntityInFront(g->camera, (Entity::ENTITY_ID)entityToAdd); break; //afegir entitats estatiques
@@ -266,7 +312,7 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 	case SDLK_4:  world.RotateSelected(10.0f, selectedEntity); break;
 	case SDLK_5:  world.RotateSelected(-10.0f, selectedEntity); break;
 	case SDLK_6:  world.DeleteEntity(g->camera); break;
-	case SDLK_0: world.saveWorld(); break;
+	case SDLK_0: world.saveEnemies(levelsEnemies[currentLevel]); break;
 		//path finding
 	case SDLK_7: {
 		Vector2 mouse = Input::mouse_position;
@@ -314,8 +360,8 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 
 		break;
 	}
-	case SDLK_9: world.loadWorld(); break;
-	case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 5; //canviar enum sense bullet (enum = 5) i el 6 es el enemic
+	case SDLK_9: world.loadEnemies(levelsEnemies[currentLevel]); break;
+	case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 4; //canviar enum sense bullet (enum = 11) i el 12 es el enemic
 
 	}
 }
@@ -340,7 +386,7 @@ void Menu::Render(bool cameraLocked) {
 		printf("Play\n");
 	}
 	else if (RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
-		world.restartWorld();
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(TUTORIAL);
 		printf("Restart\n");
 	}

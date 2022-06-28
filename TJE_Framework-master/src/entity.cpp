@@ -14,6 +14,7 @@ Entity::Entity(Matrix44 model, Mesh* mesh, Texture* texture) {
 
 
 void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cameraLocked, float tiling) {
+	Game* g = Game::instance;
 	assert((mesh != NULL, "mesh in renderMesh was null"));
 	if (!a_shader) return;
 
@@ -21,7 +22,7 @@ void Entity::RenderEntity(int primitive, Shader* a_shader, Camera* cam, bool cam
 	//enable shader
 		
 	a_shader->enable();
-
+	g->light->illumination(a_shader, cam);
 	//upload uniforms
 	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
 	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
@@ -90,6 +91,7 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 	mesh->createCollisionModel(false);
 	//enable shader upload uniforms
 	a_shader->enable();
+	g->light->illumination(a_shader, cam);
 	a_shader->setUniform("u_color", Vector4(1, 1, 1, 1));
 	a_shader->setUniform("u_viewprojection", cam->viewprojection_matrix);
 	if (texture != NULL) {
