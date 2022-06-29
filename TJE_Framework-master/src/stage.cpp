@@ -450,28 +450,28 @@ void Menu::Render(bool cameraLocked) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-	if (Stage::RenderButton(g->window_width / 2, 100, 600, 100, g->play)) {
+	if (Stage::RenderButton(g->window_width / 2, 100, 600, 100, g->playMenu)) {
 		g->PlayGameSound(g->boton);
 		g->SetStage(LEVEL);
 		printf("Play\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
+	else if (Stage::RenderButton(g->window_width / 2, 200, 600, 100, g->restartMenu)) {
 		g->PlayGameSound(g->boton);
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 300, 600, 100, g->save)) {
+	else if (Stage::RenderButton(g->window_width / 2, 300, 600, 100, g->saveMenu)) {
 		Stage::saveLevel();
 		g->PlayGameSound(g->boton);
 		printf("Save\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 400, 600, 100, g->ctrls)) {
+	else if (Stage::RenderButton(g->window_width / 2, 400, 600, 100, g->ctrlsMenu)) {
 		g->PlayGameSound(g->boton);
 		printf("Controls\n");
 		g->SetStage(CONTROLS);
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 500, 600, 100, g->exit)) {
+	else if (Stage::RenderButton(g->window_width / 2, 500, 600, 100, g->exitMenu)) {
 		g->PlayGameSound(g->AudioExit);
 		printf("Exit\n");
         g->SetStage(INTRO);
@@ -508,7 +508,7 @@ void Intro::Render(bool cameraLocked) {
 
 	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, 800, 600, g->titleBackground);
     
-	Stage::RenderGUI(g->window_width / 2, 50, 240, 40, g->play);
+	Stage::RenderGUI(g->window_width / 2, 50, 240, 40, g->playMenu);
     
     if (Stage::RenderButton(g->window_width / 6, 150, 120, 20, g->newGame)) {
 		g->PlayGameSound(g->boton);

@@ -431,9 +431,12 @@ void Game::loadTexturesAndMeshes() {
 	texture_black = texture_black->getBlackTexture();
 	texture_white = texture_black->getWhiteTexture();
 
-	play = Texture::Get("data/gui/play_.png");
-	restart = Texture::Get("data/gui/restart_.png");
-	save = Texture::Get("data/gui/save_.png");
+	playMenu = Texture::Get("data/gui/playMenu.png");
+	restartMenu = Texture::Get("data/gui/restartMenu.png");
+	saveMenu = Texture::Get("data/gui/saveMenu.png");
+    exitMenu = Texture::Get("data/gui/exitMenu.png");
+    ctrlsMenu = Texture::Get("data/gui/ctrlsMenu.png");
+    
 	exit = Texture::Get("data/gui/exit_.png");
 	volumeOn = Texture::Get("data/gui/save.png");
 	volumeOff = Texture::Get("data/gui/exit.png");
@@ -485,8 +488,8 @@ void Game::loadTexturesAndMeshes() {
 	box_col = Mesh::Get("data/box_colision_enemy.obj");
 
 	//we load a shader
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
-	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
 	light = new Light();
 	light->calcKaia();

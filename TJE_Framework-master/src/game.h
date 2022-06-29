@@ -103,9 +103,9 @@ public:
 
 
 	//botons
-	Texture* play;
-	Texture* restart;
-	Texture* save;
+	//Texture* play;
+	//Texture* restart;
+	//Texture* save;
 	Texture* exit;
 	Texture* volumeOn;
 	Texture* volumeOff;
@@ -114,6 +114,12 @@ public:
 	Texture* load;
 	Texture* newGame;
 	Texture* ctrls;
+    
+    Texture* ctrlsMenu;
+    Texture* exitMenu;
+    Texture* restartMenu;
+    Texture* playMenu;
+    Texture* saveMenu;
 
 	Texture* nexetLevel;
     
