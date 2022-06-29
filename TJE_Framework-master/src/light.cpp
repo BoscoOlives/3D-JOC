@@ -16,7 +16,7 @@ Light::Light()
 	spec_factor.set(0.2, 0.2, 0.2); //reflected specular light
 	glossiness = 20.0; //glosiness coefficient (plasticity)
 	//https://doc.instantreality.org/tools/color_calculator/
-	ambient_light = { 0.764, 0.666, 0.874 }; //here we can store the global ambient light of the scene
+	ambient_light = { 0.952, 0.823, 0.768 }; //here we can store the global ambient light of the scene
 }
 
 void Light::calcKaia() {

@@ -29,7 +29,7 @@ void Intro::onKeyDown(SDL_KeyboardEvent event) {
 
 }
 
-Tutorial::Tutorial() {
+Level::Level() {
 	Game* g = Game::instance;
 	slowMotion = false;
 	player->enemy = false;
@@ -52,7 +52,7 @@ Tutorial::Tutorial() {
 
 
 }
-void Tutorial::Render(bool cameraLocked) {
+void Level::Render(bool cameraLocked) {
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	
@@ -120,7 +120,7 @@ void Tutorial::Render(bool cameraLocked) {
 	}
 
 }
-void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
+void Level::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	SDL_ShowCursor(false); //NO mostrem el cursor
 	cameraLocked = true;
@@ -137,10 +137,10 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	
 	if (world.checkEnemies()) { // si ja no hi ha enemics, 
 		currentLevel += 1;
-		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		g->SetStage(NEXTLEVEL);
 		return;
 	}
-	slowMotion = true;
+	slowMotion = true;	
 	float playerSpeed = 2.5f * g->elapsed_time;
 	float rotSpeed = 120.0f * g->elapsed_time;
 
@@ -186,7 +186,7 @@ void Tutorial::Update(float seconds_elapsed, bool &cameraLocked) {
 	}
 }
 
-void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
+void Level::renderSkyGround(Camera* camera, bool cameraLocked){
 	Game* g = Game::instance;
 	Matrix44 skyModel;
 	skyModel.scale(0.1f, 0.1f, 0.1f);
@@ -217,21 +217,57 @@ void Tutorial::renderSkyGround(Camera* camera, bool cameraLocked){
 
 
 }
-void Tutorial::onKeyDown(SDL_KeyboardEvent event) {
-
-}
-
-Level::Level() {
-
-}
-void Level::Render(bool cameraLocked) {
-
-}
-void Level::Update(float seconds_elapsed, bool &cameraLocked) {
-
-}
 void Level::onKeyDown(SDL_KeyboardEvent event) {
-	
+
+}
+
+NextLevel::NextLevel() {
+
+}
+void NextLevel::Render(bool cameraLocked) {
+	Game* g = Game::instance;
+	int wWidth = g->window_width;
+	int wHeight = g->window_height;
+	Mesh quad;
+	quad.createQuad(wWidth / 2, wHeight/2, wWidth, wHeight, true);
+
+	Camera cam2D;
+	cam2D.setOrthographic(0, wWidth, wHeight, 0, -1, 1);
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	//Texture* texture = Texture::Get("data/gui/play-button.png");
+
+	if (!shader) return;
+	shader->enable();
+	Vector4 buttonColor = { 1, 1, 1, 0.5};
+	shader->setUniform("u_color", buttonColor);
+	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+	if (g->nexetLevel != NULL) {
+		shader->setUniform("u_texture", g->nexetLevel, 0);
+	}
+	shader->setUniform("u_time", g->time);
+	shader->setUniform("u_model", Matrix44());
+	quad.render(GL_TRIANGLES);
+
+	shader->disable();
+	std::string text_nextLevel = "PRESS SPACE TO CONTINUE\n	ESC to Menu		";
+	drawText(g->window_width /3, 450, text_nextLevel, Vector3(1, 1, 1), 2);
+}
+void NextLevel::Update(float seconds_elapsed, bool &cameraLocked) {
+	Game* g = Game::instance;
+	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {  // TECLA ESC
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		g->SetStage(LEVEL);
+		return; //acabar el update
+	}
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
+		g->SetStage(MENU);
+		return; //acabar el update
+	}
+
+}
+void NextLevel::onKeyDown(SDL_KeyboardEvent event) {
+
 }
 
 Final::Final() {
@@ -275,7 +311,7 @@ void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
 	cameraLocked = false;
 	
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
-		g->SetStage(TUTORIAL);
+		g->SetStage(LEVEL);
 		return; //acaba el update
 	}
 	float speed = seconds_elapsed * g->mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
@@ -382,12 +418,12 @@ void Menu::Render(bool cameraLocked) {
 
 
 	if (RenderButton(g->window_width / 2, 100, 600, 100, g->play)) {
-		g->SetStage(TUTORIAL);
+		g->SetStage(LEVEL);
 		printf("Play\n");
 	}
 	else if (RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
-		g->SetStage(TUTORIAL);
+		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
 	else if (RenderButton(g->window_width / 2, 300, 600, 100, g->save)) {
@@ -406,7 +442,7 @@ void Menu::Update(float seconds_elapsed, bool &cameraLocked) {
 
 	SDL_ShowCursor(true);
 	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {
-		g->SetStage(TUTORIAL);
+		g->SetStage(LEVEL);
 		return; //acaba el update
 	}
 }

@@ -54,7 +54,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 
 	InitStages();
-	currentStage = STAGE_ID::TUTORIAL;
+	currentStage = STAGE_ID::NEXTLEVEL;
 	GetCurrent()->world.InitBullets(mesh_bullet, texture_bullet);
 
 	//hide the cursor
@@ -77,11 +77,15 @@ void Game::render(void)
 
    
 	camera->enable();
-	if (currentStage == STAGE_ID::EDITMODE) {
-		GetStage(STAGE_ID::TUTORIAL)->Render(cameraLocked);
+
+	if (currentStage == STAGE_ID::EDITMODE ) {
+		GetStage(STAGE_ID::LEVEL)->Render(cameraLocked);
 	}
 	GetCurrent()->Render(cameraLocked);
 
+	if (currentStage == STAGE_ID::NEXTLEVEL) {
+		GetStage(STAGE_ID::LEVEL)->Render(cameraLocked);
+	}
     
 //    
 //    Matrix44 skyModel;
@@ -394,7 +398,7 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 {
 	if (event.button == SDL_BUTTON_LEFT)
 	{
-		if (currentStage == STAGE_ID::TUTORIAL) {
+		if (currentStage == STAGE_ID::LEVEL) {
 
 			
 			if (!GetCurrent()->player->shot && cameraLocked) { //solament pot disparar quan ha acabat la animaci— de disparar				
@@ -438,6 +442,8 @@ void Game::loadTexturesAndMeshes() {
 	exit = Texture::Get("data/gui/exit_.png");
 	volumeOn = Texture::Get("data/gui/save.png");
 	volumeOff = Texture::Get("data/gui/exit.png");
+	nexetLevel = Texture::Get("data/levels/nextlevel.png");
+
 
 
 	mesh_sphere = Mesh::Get("data/sphere.obj");
@@ -451,7 +457,7 @@ void Game::loadTexturesAndMeshes() {
 	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
 	texture_pistol  = Texture::Get("data/color-atlas-new.png");
 
-	texture_sky = Texture::Get("data/sky/sky.tga");
+	texture_sky = Texture::Get("data/sky/spaceclouds.tga");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");
 
 	
@@ -592,8 +598,8 @@ void Game::SetStage(STAGE_ID id) {
 void Game::InitStages() {
 	stages.reserve(6);
 	stages.push_back(new Intro());
-	stages.push_back(new Tutorial());
 	stages.push_back(new Level());
+	stages.push_back(new NextLevel());
 	stages.push_back(new Final());
 	stages.push_back(new EditMode());
 	stages.push_back(new Menu());

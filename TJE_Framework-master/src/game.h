@@ -69,8 +69,6 @@ public:
 	Mesh* box_col = NULL;
 	Texture* texture_cowboy = NULL;
 	Texture* texture_bullet = NULL;
-	Texture* texture_zona0 = NULL;
-	Texture* texture_zona1 = NULL;
 	Texture* texture_sky = NULL;
 	Texture* texture_rock1 = NULL;
 	Texture* texture_pistol = NULL;
@@ -102,9 +100,6 @@ public:
 	Texture* texture_SupportCorner = NULL;
 
 
-
-
-
 	//botons
 	Texture* play;
 	Texture* restart;
@@ -112,6 +107,8 @@ public:
 	Texture* exit;
 	Texture* volumeOn;
 	Texture* volumeOff;
+
+	Texture* nexetLevel;
 
 	std::vector<Stage*> stages;
 	STAGE_ID currentStage;

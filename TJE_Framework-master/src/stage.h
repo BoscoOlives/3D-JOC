@@ -24,8 +24,8 @@
 
 enum STAGE_ID {
     INTRO = 0,
-    TUTORIAL = 1,
-    LEVEL = 2,
+    LEVEL = 1,
+    NEXTLEVEL = 2,
     FINAL = 3,
     EDITMODE = 4,
 	MENU = 5
@@ -68,25 +68,25 @@ public:
     void onKeyDown(SDL_KeyboardEvent event);
 };
 
-class Tutorial : public Stage {
+class Level : public Stage {
 public:
 	//Variables
-    static Tutorial*  instance;
+    static Level*  instance;
 	
-    STAGE_ID GetId() {return STAGE_ID::TUTORIAL; };
-    Tutorial();//Constructor
+    STAGE_ID GetId() {return STAGE_ID::LEVEL; };
+    Level();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
 	void renderSkyGround(Camera* camera, bool cameraLocked);
     void onKeyDown(SDL_KeyboardEvent event);
 };
 
-class Level : public Stage {
+class NextLevel : public Stage {
 public:
-    static Tutorial* instance;
+    static NextLevel* instance;
 
-    STAGE_ID GetId() {return STAGE_ID::LEVEL; };
-    Level();//Constructor
+    STAGE_ID GetId() {return STAGE_ID::NEXTLEVEL; };
+    NextLevel();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
     void onKeyDown(SDL_KeyboardEvent event);
