@@ -54,7 +54,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 
 	InitStages();
-	currentStage = STAGE_ID::NEXTLEVEL;
+	currentStage = STAGE_ID::INTRO;
 	GetCurrent()->world.InitBullets(mesh_bullet, texture_bullet);
 
 	//hide the cursor
@@ -80,6 +80,7 @@ void Game::render(void)
 
 	if (currentStage == STAGE_ID::EDITMODE ) {
 		GetStage(STAGE_ID::LEVEL)->Render(cameraLocked);
+        drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2); //render the FPS, Draw Calls, etc
 	}
 	GetCurrent()->Render(cameraLocked);
 
@@ -217,8 +218,6 @@ void Game::render(void)
 //    wasLeftMousePressed = false;
 //
 
-	//render the FPS, Draw Calls, etc
-	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
@@ -410,6 +409,9 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 		if (currentStage == STAGE_ID::MENU) {
 			GetCurrent()->wasLeftMousePressed = true;
 		}
+        if (currentStage == STAGE_ID::INTRO) {
+            GetCurrent()->wasLeftMousePressed = true;
+        }
 	}
 }
 
@@ -443,6 +445,8 @@ void Game::loadTexturesAndMeshes() {
 	volumeOn = Texture::Get("data/gui/save.png");
 	volumeOff = Texture::Get("data/gui/exit.png");
 	nexetLevel = Texture::Get("data/levels/nextlevel.png");
+    
+    titleBackground = Texture::Get("data/gui/titleBackground.png");
 
 
 
@@ -483,8 +487,8 @@ void Game::loadTexturesAndMeshes() {
 	box_col = Mesh::Get("data/box_colision_enemy.obj");
 
 	//we load a shader
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
-	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
 	light = new Light();
 	light->calcKaia();

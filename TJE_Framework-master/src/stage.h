@@ -65,6 +65,8 @@ public:
     Intro(); //Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
+    void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+    bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
     void onKeyDown(SDL_KeyboardEvent event);
 };
 
@@ -125,7 +127,7 @@ public:
 	Menu();//Constructor
 	void Render(bool cameraLocked);
 	void Update(float seconds_elapsed, bool &cameraLocked);
-	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
+	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
 	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
     void onKeyDown(SDL_KeyboardEvent event);
 

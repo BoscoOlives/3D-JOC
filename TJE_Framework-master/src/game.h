@@ -109,6 +109,8 @@ public:
 	Texture* volumeOff;
 
 	Texture* nexetLevel;
+    
+    Texture* titleBackground;
 
 	std::vector<Stage*> stages;
 	STAGE_ID currentStage;

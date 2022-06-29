@@ -16,18 +16,7 @@ int Stage::currentLevel;
 //
 //}
 
-Intro::Intro() {
- 
-}
-void Intro::Render(bool cameraLocked) {
 
-}
-void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
-
-}
-void Intro::onKeyDown(SDL_KeyboardEvent event) {
-
-}
 
 Level::Level() {
 	Game* g = Game::instance;
@@ -431,7 +420,7 @@ void Menu::Render(bool cameraLocked) {
 	}
 	else if (RenderButton(g->window_width / 2, 400, 600, 100, g->exit)) {
 		printf("Exit\n");
-		g->must_exit = true;
+        g->SetStage(INTRO);
 	}
 	
 	wasLeftMousePressed = false;
@@ -496,3 +485,96 @@ void Menu::RenderGUI(float x, float y, float w, float h, Texture* texture, Vecto
 }
 
 
+
+
+
+Intro::Intro() {
+    wasLeftMousePressed = false;
+}
+void Intro::Render(bool cameraLocked) {
+    Game* g = Game::instance;
+    //Render All GUI ----------------------------------
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    RenderGUI(g->window_width / 2, g->window_height / 2, 800, 600, g->titleBackground);
+    
+    RenderGUI(g->window_width / 2, 50, 240, 40, g->play);
+    
+    if (RenderButton(g->window_width / 6, 150, 120, 20, g->play)) {
+        g->SetStage(LEVEL);
+        printf("New Game\n");
+    }
+    else if (RenderButton(g->window_width / 6, 200, 120, 20, g->restart)) {
+        world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+        g->SetStage(LEVEL);
+        printf("Load Game\n");
+    }
+    else if (RenderButton(g->window_width / 6, 250, 120, 20, g->exit)) {
+        printf("Exit\n");
+        g->must_exit = true;
+    }
+    
+    wasLeftMousePressed = false;
+}
+
+bool Intro::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
+    Vector2 mouse = Input::mouse_position;
+    float halfWidth = w * 0.5;
+    float halfHeight = h * 0.5;
+    float min_x = x - halfWidth;
+    float max_x = x + halfWidth;
+    float min_y = y - halfHeight;
+    float max_y = y + halfHeight;
+
+    bool hover = mouse.x >= min_x && mouse.x <= max_x && mouse.y >= min_y && mouse.y <= max_y;
+    Vector4 buttonColor = hover ? Vector4(1, 1, 1, 1) : Vector4(1, 1, 1, 0.7f);
+    RenderGUI(x, y, w, h, texture, buttonColor, flipYV);
+    printf("hover: %d, pressed:%d\n", hover, wasLeftMousePressed);
+    return wasLeftMousePressed && hover;
+}
+
+void Intro::RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
+    Game* g = Game::instance;
+    int window_width = g->window_width;
+    int window_height = g->window_height;
+    Mesh quad;
+    quad.createQuad(x, y, w, h, flipYV);
+
+    Camera cam2D;
+    cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
+
+    Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    //Texture* texture = Texture::Get("data/gui/play-button.png");
+
+    if (!shader) return;
+    shader->enable();
+
+    shader->setUniform("u_color", color);
+    shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+    if (texture != NULL) {
+        shader->setUniform("u_texture", texture, 0);
+    }
+    shader->setUniform("u_time", g->time);
+    //shader->setUniform("u_tex_tiling", 1.0f);
+    shader->setUniform("u_model", Matrix44());
+    quad.render(GL_TRIANGLES);
+
+    shader->disable();
+}
+
+void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
+    Game* g = Game::instance;
+    cameraLocked = true;
+
+    SDL_ShowCursor(true);
+    if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {
+        g->SetStage(LEVEL);
+        return; //acaba el update
+    }
+}
+void Intro::onKeyDown(SDL_KeyboardEvent event) {
+
+}
