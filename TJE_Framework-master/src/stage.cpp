@@ -16,8 +16,76 @@ int Stage::currentLevel;
 //
 //}
 
+bool Stage::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
+	Vector2 mouse = Input::mouse_position;
+	float halfWidth = w * 0.5;
+	float halfHeight = h * 0.5;
+	float min_x = x - halfWidth;
+	float max_x = x + halfWidth;
+	float min_y = y - halfHeight;
+	float max_y = y + halfHeight;
+
+	bool hover = mouse.x >= min_x && mouse.x <= max_x && mouse.y >= min_y && mouse.y <= max_y;
+	Vector4 buttonColor = hover ? Vector4(1, 1, 1, 1) : Vector4(1, 1, 1, 0.7f);
+	RenderGUI(x, y, w, h, texture, buttonColor, flipYV);
+	return wasLeftMousePressed && hover;
+}
+
+void Stage::RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
+	Game* g = Game::instance;
+	int window_width = g->window_width;
+	int window_height = g->window_height;
+	Mesh quad;
+	quad.createQuad(x, y, w, h, flipYV);
+
+	Camera cam2D;
+	cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	//Texture* texture = Texture::Get("data/gui/play-button.png");
+
+	if (!shader) return;
+	shader->enable();
+
+	shader->setUniform("u_color", color);
+	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+	if (texture != NULL) {
+		shader->setUniform("u_texture", texture, 0);
+	}
+	shader->setUniform("u_time", g->time);
+	//shader->setUniform("u_tex_tiling", 1.0f);
+	shader->setUniform("u_model", Matrix44());
+	quad.render(GL_TRIANGLES);
+
+	shader->disable();
+}
+void Stage::saveLevel() {
+	//save player, enemies (positions, rotations...)
+	printf("Saving Level...\n");
+	FILE* file = fopen("data/saves/levelSaved.txt", "wb");
+
+	std::string str = { std::to_string(currentLevel) };
+
+	const char* buffer = str.c_str();
+
+	fwrite(buffer, sizeof(char), strlen(buffer), file);
 
 
+	fclose(file);
+}
+int Stage::loadLevel() {
+	std::string STR = "";
+	readFile("data/saves/levelSaved.txt", STR);
+	std::stringstream ss(STR);
+
+	//std::string level;
+	int level;
+	if (!ss.eof()) {
+		ss >> level;
+		return level;
+	}
+	return 0;
+}
 Level::Level() {
 	Game* g = Game::instance;
 	slowMotion = false;
@@ -25,14 +93,12 @@ Level::Level() {
 	//CREAR JUGADOR
 	player_entity = new Entity(playerModel, g->mesh_pistol, g->texture_pistol); //creem la entitat Jugador
 	currentLevel = 0;
-	//char* path_level_0 = "world_scene0.txt";
-	//char* path_level_1 = "world_scene1.txt";
+
 	levelsWorld.reserve(2);
 	levelsWorld.push_back("world_scene0.txt");
 	levelsWorld.push_back("world_scene1.txt");
 
-	//char* path_level_0 = "enemies0.txt";
-	//char* path_level_1 = "enemies1.txt";
+
 	levelsEnemies.reserve(2);
 	levelsEnemies.push_back("enemies0.txt");
 	levelsEnemies.push_back("enemies1.txt");
@@ -122,10 +188,7 @@ void Level::Update(float seconds_elapsed, bool &cameraLocked) {
 		return;
 	}
 	
-	//printf("%d", world.entities.size());
-	
 	if (world.checkEnemies()) { // si ja no hi ha enemics, 
-		currentLevel += 1;
 		g->SetStage(NEXTLEVEL);
 		return;
 	}
@@ -215,36 +278,20 @@ NextLevel::NextLevel() {
 }
 void NextLevel::Render(bool cameraLocked) {
 	Game* g = Game::instance;
-	int wWidth = g->window_width;
-	int wHeight = g->window_height;
-	Mesh quad;
-	quad.createQuad(wWidth / 2, wHeight/2, wWidth, wHeight, true);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Camera cam2D;
-	cam2D.setOrthographic(0, wWidth, wHeight, 0, -1, 1);
-
-	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	//Texture* texture = Texture::Get("data/gui/play-button.png");
-
-	if (!shader) return;
-	shader->enable();
-	Vector4 buttonColor = { 1, 1, 1, 0.5};
-	shader->setUniform("u_color", buttonColor);
-	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
-	if (g->nexetLevel != NULL) {
-		shader->setUniform("u_texture", g->nexetLevel, 0);
-	}
-	shader->setUniform("u_time", g->time);
-	shader->setUniform("u_model", Matrix44());
-	quad.render(GL_TRIANGLES);
-
-	shader->disable();
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->nexetLevel);
+	
 	std::string text_nextLevel = "PRESS SPACE TO CONTINUE\n	ESC to Menu		";
 	drawText(g->window_width /3, 450, text_nextLevel, Vector3(1, 1, 1), 2);
 }
 void NextLevel::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {  // TECLA ESC
+		currentLevel += 1;
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
 		return; //acabar el update
@@ -286,7 +333,7 @@ void EditMode::Render(bool cameraLocked) {
 	drawText(g->window_width - 200, 2, text_edicio, Vector3(1, 1, 1), 2);
 	std::string pos = "POS: " + to_string(g->camera->eye.x) + to_string(g->camera->eye.z) + to_string(g->camera->eye.z);
 	drawText(2, g->window_height-100, pos, Vector3(1, 1, 1), 2);
-	
+	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2); //render the FPS, Draw Calls, etc
 	//Draw the floor grid
 	drawGrid();
 
@@ -324,10 +371,7 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 
 	switch (event.keysym.sym)
 	{
-	case SDLK_ESCAPE: {
-		g->GetStage(MENU);
-		return;
-	}
+	case SDLK_ESCAPE: g->GetStage(MENU);break;
 	case SDLK_F1: Shader::ReloadAll(); break;
 	case SDLK_1: world.AddEntityInFront(g->camera, Entity::ENTITY_ID::ENEMY); break; //afegir enemic
 	case SDLK_2: world.AddEntityInFront(g->camera, (Entity::ENTITY_ID)entityToAdd); break; //afegir entitats estatiques
@@ -406,19 +450,29 @@ void Menu::Render(bool cameraLocked) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-	if (RenderButton(g->window_width / 2, 100, 600, 100, g->play)) {
+	if (Stage::RenderButton(g->window_width / 2, 100, 600, 100, g->play)) {
+		g->PlayGameSound(g->boton);
 		g->SetStage(LEVEL);
 		printf("Play\n");
 	}
-	else if (RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
+	else if (Stage::RenderButton(g->window_width / 2, 200, 600, 100, g->restart)) {
+		g->PlayGameSound(g->boton);
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
-	else if (RenderButton(g->window_width / 2, 300, 600, 100, g->save)) {
+	else if (Stage::RenderButton(g->window_width / 2, 300, 600, 100, g->save)) {
+		Stage::saveLevel();
+		g->PlayGameSound(g->boton);
 		printf("Save\n");
 	}
-	else if (RenderButton(g->window_width / 2, 400, 600, 100, g->exit)) {
+	else if (Stage::RenderButton(g->window_width / 2, 400, 600, 100, g->ctrls)) {
+		g->PlayGameSound(g->boton);
+		printf("Controls\n");
+		g->SetStage(CONTROLS);
+	}
+	else if (Stage::RenderButton(g->window_width / 2, 500, 600, 100, g->exit)) {
+		g->PlayGameSound(g->AudioExit);
 		printf("Exit\n");
         g->SetStage(INTRO);
 	}
@@ -439,53 +493,6 @@ void Menu::onKeyDown(SDL_KeyboardEvent event) {
 
 }
 
-bool Menu::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
-	Vector2 mouse = Input::mouse_position;
-	float halfWidth = w * 0.5;
-	float halfHeight = h * 0.5;
-	float min_x = x - halfWidth;
-	float max_x = x + halfWidth;
-	float min_y = y - halfHeight;
-	float max_y = y + halfHeight;
-
-	bool hover = mouse.x >= min_x && mouse.x <= max_x && mouse.y >= min_y && mouse.y <= max_y;
-	Vector4 buttonColor = hover ? Vector4(1, 1, 1, 1) : Vector4(1, 1, 1, 0.7f);
-
-	RenderGUI(x, y, w, h, texture, buttonColor, flipYV);
-	return wasLeftMousePressed && hover;
-}
-
-void Menu::RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
-	Game* g = Game::instance;
-	int window_width = g->window_width;
-	int window_height = g->window_height;
-	Mesh quad;
-	quad.createQuad(x, y, w, h, flipYV);
-
-	Camera cam2D;
-	cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
-
-	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	//Texture* texture = Texture::Get("data/gui/play-button.png");
-
-	if (!shader) return;
-	shader->enable();
-
-	shader->setUniform("u_color", color);
-	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
-	if (texture != NULL) {
-		shader->setUniform("u_texture", texture, 0);
-	}
-	shader->setUniform("u_time", g->time);
-	//shader->setUniform("u_tex_tiling", 1.0f);
-	shader->setUniform("u_model", Matrix44());
-	quad.render(GL_TRIANGLES);
-
-	shader->disable();
-}
-
-
-
 
 
 Intro::Intro() {
@@ -499,20 +506,31 @@ void Intro::Render(bool cameraLocked) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    RenderGUI(g->window_width / 2, g->window_height / 2, 800, 600, g->titleBackground);
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, 800, 600, g->titleBackground);
     
-    RenderGUI(g->window_width / 2, 50, 240, 40, g->play);
+	Stage::RenderGUI(g->window_width / 2, 50, 240, 40, g->play);
     
-    if (RenderButton(g->window_width / 6, 150, 120, 20, g->play)) {
+    if (Stage::RenderButton(g->window_width / 6, 150, 120, 20, g->newGame)) {
+		g->PlayGameSound(g->boton);
+		currentLevel = 0;
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
         g->SetStage(LEVEL);
         printf("New Game\n");
     }
-    else if (RenderButton(g->window_width / 6, 200, 120, 20, g->restart)) {
-        world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+    else if (Stage::RenderButton(g->window_width / 6, 200, 120, 20, g->load)) {
+		currentLevel = loadLevel();
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		g->PlayGameSound(g->boton);
         g->SetStage(LEVEL);
         printf("Load Game\n");
     }
-    else if (RenderButton(g->window_width / 6, 250, 120, 20, g->exit)) {
+	else if (Stage::RenderButton(g->window_width / 6, 250, 120, 20, g->ctrls)) {
+		g->PlayGameSound(g->boton);
+		g->SetStage(CONTROLS);
+		printf("Load Game\n");
+	}
+    else if (Stage::RenderButton(g->window_width / 6, 300, 120, 20, g->exit)) {
+		g->PlayGameSound(g->AudioExit);
         printf("Exit\n");
         g->must_exit = true;
     }
@@ -520,50 +538,7 @@ void Intro::Render(bool cameraLocked) {
     wasLeftMousePressed = false;
 }
 
-bool Intro::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
-    Vector2 mouse = Input::mouse_position;
-    float halfWidth = w * 0.5;
-    float halfHeight = h * 0.5;
-    float min_x = x - halfWidth;
-    float max_x = x + halfWidth;
-    float min_y = y - halfHeight;
-    float max_y = y + halfHeight;
 
-    bool hover = mouse.x >= min_x && mouse.x <= max_x && mouse.y >= min_y && mouse.y <= max_y;
-    Vector4 buttonColor = hover ? Vector4(1, 1, 1, 1) : Vector4(1, 1, 1, 0.7f);
-    RenderGUI(x, y, w, h, texture, buttonColor, flipYV);
-    printf("hover: %d, pressed:%d\n", hover, wasLeftMousePressed);
-    return wasLeftMousePressed && hover;
-}
-
-void Intro::RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
-    Game* g = Game::instance;
-    int window_width = g->window_width;
-    int window_height = g->window_height;
-    Mesh quad;
-    quad.createQuad(x, y, w, h, flipYV);
-
-    Camera cam2D;
-    cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
-
-    Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    //Texture* texture = Texture::Get("data/gui/play-button.png");
-
-    if (!shader) return;
-    shader->enable();
-
-    shader->setUniform("u_color", color);
-    shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
-    if (texture != NULL) {
-        shader->setUniform("u_texture", texture, 0);
-    }
-    shader->setUniform("u_time", g->time);
-    //shader->setUniform("u_tex_tiling", 1.0f);
-    shader->setUniform("u_model", Matrix44());
-    quad.render(GL_TRIANGLES);
-
-    shader->disable();
-}
 
 void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
     Game* g = Game::instance;
@@ -576,5 +551,47 @@ void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
     }
 }
 void Intro::onKeyDown(SDL_KeyboardEvent event) {
+
+}
+Controls::Controls() {
+	wasLeftMousePressed = false;
+}
+void Controls::Render(bool cameraLocked) {
+	Game* g = Game::instance;
+	//Render All GUI ----------------------------------
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->controls);
+
+	if (Stage::RenderButton(g->window_width / 2, 550, 240, 40, g->back)) {
+		g->PlayGameSound(g->boton);
+		if (g->previousStage == STAGE_ID::INTRO) {
+			g->SetStage(INTRO);
+		}
+		if (g->previousStage == STAGE_ID::MENU) {
+			g->SetStage(MENU);
+		}
+		printf("Menu\n");
+	}
+
+	wasLeftMousePressed = false;
+}
+
+
+
+void Controls::Update(float seconds_elapsed, bool& cameraLocked) {
+	Game* g = Game::instance;
+	cameraLocked = true;
+
+	SDL_ShowCursor(true);
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		g->SetStage(MENU);
+		return; //acaba el update
+	}
+}
+void Controls::onKeyDown(SDL_KeyboardEvent event) {
 
 }

@@ -67,6 +67,7 @@ public:
 	Mesh* mesh_cowboy_idle = NULL;
 	Mesh* mesh_cowboy_run = NULL;
 	Mesh* box_col = NULL;
+	Mesh* mesh_sphere;
 	Texture* texture_cowboy = NULL;
 	Texture* texture_bullet = NULL;
 	Texture* texture_sky = NULL;
@@ -86,7 +87,8 @@ public:
 	HSAMPLE recoil;
 	HSAMPLE hit_enemy;
 	HSAMPLE hit_player;
-	Mesh* mesh_sphere;
+	HSAMPLE boton;
+	HSAMPLE AudioExit;
 	//iluminacio
 	Shader* phong_shader = NULL;
 	Light* light = NULL;
@@ -107,6 +109,11 @@ public:
 	Texture* exit;
 	Texture* volumeOn;
 	Texture* volumeOff;
+	Texture* controls;
+	Texture* back;
+	Texture* load;
+	Texture* newGame;
+	Texture* ctrls;
 
 	Texture* nexetLevel;
     
@@ -114,6 +121,7 @@ public:
 
 	std::vector<Stage*> stages;
 	STAGE_ID currentStage;
+	STAGE_ID previousStage;
     
 
 	Game( int window_width, int window_height, SDL_Window* window );

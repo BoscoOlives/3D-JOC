@@ -28,7 +28,8 @@ enum STAGE_ID {
     NEXTLEVEL = 2,
     FINAL = 3,
     EDITMODE = 4,
-	MENU = 5
+	MENU = 5,
+    CONTROLS = 6
 };
 
 
@@ -57,6 +58,10 @@ public:
     virtual void Render(bool cameraLocked) = 0;
     virtual void Update(float seconds_elapsed, bool &cameraLocked) = 0;
     virtual void onKeyDown(SDL_KeyboardEvent event) = 0;
+    void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+    bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+    void saveLevel();
+    int loadLevel();
 };
 
 class Intro : public Stage {
@@ -65,8 +70,6 @@ public:
     Intro(); //Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool &cameraLocked);
-    void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
-    bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
     void onKeyDown(SDL_KeyboardEvent event);
 };
 
@@ -127,8 +130,21 @@ public:
 	Menu();//Constructor
 	void Render(bool cameraLocked);
 	void Update(float seconds_elapsed, bool &cameraLocked);
-	void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
-	bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
+    void onKeyDown(SDL_KeyboardEvent event);
+
+
+};
+class Controls : public Stage {
+public:
+
+    //variables
+    Entity* selectedEntity = NULL;
+
+
+    STAGE_ID GetId() { return STAGE_ID::MENU; };
+    Controls();//Constructor
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool& cameraLocked);
     void onKeyDown(SDL_KeyboardEvent event);
 
 };

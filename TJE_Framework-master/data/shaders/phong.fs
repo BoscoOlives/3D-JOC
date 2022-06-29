@@ -33,24 +33,19 @@ void main()
 	V = normalize(V);
 
 	//ambient
-	//vec3 new_ambient = ambient * texture_normal.xyz;
 
 	//diffuse
 	vec3 diffuse = diff_factor * max(0.0,dot(N,L)) * sun_color;
 	
 	//specular
 	vec3 specular = spec_factor * sun_color * pow( max(0.0, dot(R,V)), glossiness );
-	//vec3 specular = (texture_normal.xyz * texture_normal.w) * pow(clamp(dot(R, V), 0.0, 1.0), 30.0) * diffuse_color * texture_normal.xyz;
 	
 	//final color
 	//texture_normal = mat_color
 	vec3 final_color = texture_normal.xyz * (ambient + diffuse) + specular;
-	//vec3 Ip = ambient + diffuse + specular;
 
 	
 	//set the ouput color por the pixel
 	gl_FragColor = vec4(final_color, 1.0);
-	//gl_FragColor = vec4(Ip, 1.0);
-	
 	//gl_FragColor = u_color * texture2D( u_texture, uv );
 }

@@ -54,6 +54,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 
 	InitStages();
+	previousStage = STAGE_ID::INTRO;
 	currentStage = STAGE_ID::INTRO;
 	GetCurrent()->world.InitBullets(mesh_bullet, texture_bullet);
 
@@ -78,16 +79,11 @@ void Game::render(void)
    
 	camera->enable();
 
-	if (currentStage == STAGE_ID::EDITMODE ) {
+	if (currentStage == STAGE_ID::EDITMODE || currentStage == STAGE_ID::NEXTLEVEL) {
 		GetStage(STAGE_ID::LEVEL)->Render(cameraLocked);
-        drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2); //render the FPS, Draw Calls, etc
 	}
-	GetCurrent()->Render(cameraLocked);
 
-	if (currentStage == STAGE_ID::NEXTLEVEL) {
-		GetStage(STAGE_ID::LEVEL)->Render(cameraLocked);
-	}
-    
+	GetCurrent()->Render(cameraLocked);
 //    
 //    Matrix44 skyModel;
 //    skyModel.translate(camera->eye.x, camera->eye.y - 40.0f, camera->eye.z);
@@ -406,12 +402,9 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 			}
 		}
 
-		if (currentStage == STAGE_ID::MENU) {
+		if (currentStage == STAGE_ID::MENU || currentStage == STAGE_ID::INTRO || currentStage == STAGE_ID::CONTROLS) {
 			GetCurrent()->wasLeftMousePressed = true;
 		}
-        if (currentStage == STAGE_ID::INTRO) {
-            GetCurrent()->wasLeftMousePressed = true;
-        }
 	}
 }
 
@@ -445,6 +438,11 @@ void Game::loadTexturesAndMeshes() {
 	volumeOn = Texture::Get("data/gui/save.png");
 	volumeOff = Texture::Get("data/gui/exit.png");
 	nexetLevel = Texture::Get("data/levels/nextlevel.png");
+	controls = Texture::Get("data/gui/controls.png");
+	back = Texture::Get("data/gui/back.png");
+	load = Texture::Get("data/gui/load.png");
+	newGame = Texture::Get("data/gui/newGame.png");
+	ctrls = Texture::Get("data/gui/ctrls.png");
     
     titleBackground = Texture::Get("data/gui/titleBackground.png");
 
@@ -461,7 +459,7 @@ void Game::loadTexturesAndMeshes() {
 	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
 	texture_pistol  = Texture::Get("data/color-atlas-new.png");
 
-	texture_sky = Texture::Get("data/sky/spaceclouds.tga");
+	texture_sky = Texture::Get("data/sky/spaceclouds.png");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");
 
 	
@@ -487,8 +485,8 @@ void Game::loadTexturesAndMeshes() {
 	box_col = Mesh::Get("data/box_colision_enemy.obj");
 
 	//we load a shader
-	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
 	light = new Light();
 	light->calcKaia();
@@ -532,7 +530,7 @@ void Game::PlayGameSound(HSAMPLE fileSample) {
 	if(GetCurrent()->slowMotion){ BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 15000); }
 	else { BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 0); }
 	
-	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_VOL, 0.3); //volumen del dispar (el podriem controlar amb una variable des del menu!
+	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_VOL, 0.5); //volumen del dispar (el podriem controlar amb una variable des del menu!
 	//Lanzamos un sample
 	BASS_ChannelPlay(hSampleChannel, true);
 
@@ -543,6 +541,8 @@ void Game::LoadAllSamples() {
 	recoil = LoadSample("data/audios/recoil.wav");
 	hit_enemy = LoadSample("data/audios/hit_enemy.wav");
 	hit_player = LoadSample("data/audios/hit_player.wav");
+	boton = LoadSample("data/audios/boton.wav");
+	AudioExit = LoadSample("data/audios/exit.wav");
 }
 
 //bool Game::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV ) {
@@ -595,16 +595,18 @@ Stage* Game::GetCurrent() {
 	return GetStage(currentStage);
 }
 void Game::SetStage(STAGE_ID id) {
+	previousStage = currentStage;
 	currentStage = id;
 }
 
 
 void Game::InitStages() {
-	stages.reserve(6);
+	stages.reserve(7);
 	stages.push_back(new Intro());
 	stages.push_back(new Level());
 	stages.push_back(new NextLevel());
 	stages.push_back(new Final());
 	stages.push_back(new EditMode());
 	stages.push_back(new Menu());
+	stages.push_back(new Controls());
 }
