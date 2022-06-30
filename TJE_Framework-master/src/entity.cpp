@@ -107,12 +107,14 @@ void Entity::RenderEntityAnim(int primitive, Shader* a_shader, Camera* cam, Vect
 	//Render de l'arma
 	if(look)
 	{
-		Matrix44 neckLocalMatrix = resultSk.getBoneMatrix("mixamorig_RightHand", false);
-		neckLocalMatrix.rotate(90.0f * DEG2RAD, Vector3(0.0, -1.0, 1.0));
+		Matrix44 neckLocalMatrix = resultSk.getBoneMatrix("mixamorig_Spine", false);
+		//neckLocalMatrix.rotate(90.0f * DEG2RAD, Vector3(0.0, -1.0, 1.0));
+		neckLocalMatrix.rotate(180.0f * DEG2RAD, Vector3(0.0, -1.0, 0.0));
 
 		Matrix44 localToWorldMatrix = neckLocalMatrix * model;
 
-		localToWorldMatrix.translate(-13.0f, 9.0f, 6.0f); //es una tirita, no mola fer-ho així
+		//localToWorldMatrix.translate(-13.0f, 9.0f, 6.0f); //es una tirita, no mola fer-ho així
+		localToWorldMatrix.translate(-5.0f, 30.0f, -22.0f); //es una tirita, no mola fer-ho així
 
 		Entity* pistol_entity = new Entity(localToWorldMatrix, g->mesh_pistol_e, g->texture_black);
 		pistol_entity->RenderEntity(GL_TRIANGLES, a_shader, cam, cameraLocked);

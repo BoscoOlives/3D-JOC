@@ -42,6 +42,7 @@ public:
     static std::vector<char*> levelsWorld;
     static std::vector<char*> levelsEnemies;
     static int currentLevel;
+	static bool slowMotion;
 
 
 	Player* player = &world.player;
@@ -51,7 +52,6 @@ public:
 
 	//bool pause;
 	bool wasLeftMousePressed;
-	bool slowMotion;
 
 	//Stage(); //crec que no hauria de ser necessaria
     virtual STAGE_ID GetId() = 0;

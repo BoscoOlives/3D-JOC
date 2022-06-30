@@ -68,8 +68,8 @@ void Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLock
     bullet->entity_bullet->dir = dir;
     bullet->entity_bullet->yaw = this->yaw;
 
-    g->PlayGameSound(g->shoot);
-    //g->PlayGameSound(g->recoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
+    g->PlayGameSound(g->ChShoot);
+    //g->PlayGameSound(g->ChRecoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
 }
 
 Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
@@ -111,19 +111,19 @@ void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> en
     float forwardDot = forward.dot(toTarget);
     if (dist < facingDistance) { //si esta lluny no sa encari cap al jugador
         
-        if (forwardDot < 0.98f && !collidingWithEntities) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
+        if (forwardDot < 0.98f) { //pq no intenti encarar-se més si ja esta casi perfectament encarat
             yaw += 90.0f * g->GetCurrent()->world.sign(sideDot) * elapsed_time*2.0f; //el *2 es perque la rotacio es molta lenta en comparació el desplaçament
         }
         else {
             if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
                 Vector3 playerVel = forward * 1.0f * elapsed_time;
-                this->checkColisions(playerVel, entities, elapsed_time, 0.1f); //abans de canviar la posicio mira si colisiona
-                this->checkColisions(playerVel, enemies, elapsed_time, 1.0f);
+                this->checkColisions(playerVel, entities, elapsed_time, 0.3f); //abans de canviar la posicio mira si colisiona
+                this->checkColisions(playerVel, enemies, elapsed_time, 0.03f);
 
-                if (this->collidingWithEntities) {
-                    pos = pos + Vector3(0.02f, 0.0f, 0.0f);
+                //if (this->collidingWithEntities) {
+                    //pos = pos + Vector3(0.02f, 0.0f, 0.0f);
 
-                }
+                //}
                 if (this->collidingWithEnemies) { //si hi ha colisio enemic-enemic
                     int random = (rand() % 3)- 1;
                     pos = pos + Vector3(0.01f * random, 0.0f, 0.01f * random); //apliquem desplaçament random entre -1 0 1
@@ -182,7 +182,6 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
         //si la esfera est‡ colisionando muevela a su posicion anterior alejandola del objeto
         Vector3 push_away = normalize(coll - character_center) * elpased_time;
         nexPos = pos - push_away; //move to previous pos but a little bit further
-        //yaw = yaw + 10.0f;
         //cuidado con la Y, si nuestro juego es 2D la ponemos a 0
         nexPos.y = 0;
 

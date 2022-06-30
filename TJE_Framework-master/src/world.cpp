@@ -316,7 +316,7 @@ void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorl
                 Vector3 pos; Vector3 normal;
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
                     //printf("COLLISION BULLET WITH ENEMY\n");
-                    g->PlayGameSound(g->hit_enemy);
+                    g->PlayGameSound(g->ChHit_enemy);
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                     player_enemies.erase(player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
                     currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
@@ -329,9 +329,9 @@ void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorl
         Vector3 collnorm;
         if (g->box_col->testSphereCollision(entityPlayer->model, bullet_center, 0.1, coll, collnorm ) && currentBullet->author != player.id) {
             printf("YOU DIE!\n");
-            g->PlayGameSound(g->hit_player);
+            g->PlayGameSound(g->ChHit_Player);
             currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
-            restartWorld(levelsWorld, levelsEnemies, currentLevel); //reset del level
+            //restartWorld(levelsWorld, levelsEnemies, currentLevel); //reset del level
             continue;
         }
 

@@ -12,6 +12,7 @@ World Stage::world;
 std::vector<char*> Stage::levelsWorld;
 std::vector<char*> Stage::levelsEnemies;
 int Stage::currentLevel;
+bool Stage::slowMotion;
 //Stage::Stage() {
 //
 //}
@@ -167,11 +168,9 @@ void Level::Render(bool cameraLocked) {
 	
 
 	if (cameraLocked) {//TEXT TECLES MODE GAMEPLAY
-		std::string text_gameplay = "LeftMouse Shot\nWASD Move Player\nMouse Move Camera\n ESC Menu\n";
-		drawText(g->window_width - 200, 2, text_gameplay, Vector3(1, 1, 1), 2);
 		drawText(g->window_width / 2, g->window_height / 2, "+", Vector3(1, 1, 1), 2);
-		std:string num_enemies = "N. Enemies" + to_string((unsigned int)world.enemies.size());
-		drawText(2, 20, num_enemies, Vector3(1, 1, 1), 2);
+		std:string num_enemies = to_string((unsigned int)world.enemies.size()) + " Enemies Left" ;
+		drawText(int(g->window_width/2) - 60, 5, num_enemies, Vector3(1, 1, 1), 2);
 	}
 
 }
@@ -290,7 +289,12 @@ void NextLevel::Render(bool cameraLocked) {
 }
 void NextLevel::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
+	slowMotion = false;
 	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {  // TECLA ESC
+		if (currentLevel == levelsWorld.size()){
+			g->SetStage(INTRO); //posar FINAL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			return; //acabar el update
+		}
 		currentLevel += 1;
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
@@ -313,7 +317,7 @@ void Final::Render(bool cameraLocked) {
 
 }
 void Final::Update(float seconds_elapsed, bool &cameraLocked) {
-
+	slowMotion = false;
 }
 void Final::onKeyDown(SDL_KeyboardEvent event) {
 	
@@ -345,7 +349,7 @@ void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	Camera* camera = g->camera;
 	cameraLocked = false;
-	
+	slowMotion = false;
 	if (Input::wasKeyPressed(SDL_SCANCODE_TAB)) {
 		g->SetStage(LEVEL);
 		return; //acaba el update
@@ -449,30 +453,32 @@ void Menu::Render(bool cameraLocked) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->menuBorder);
 
-	if (Stage::RenderButton(g->window_width / 2, 100, 600, 100, g->playMenu)) {
-		g->PlayGameSound(g->boton);
+	if (Stage::RenderButton(g->window_width / 2, 230, 300, 50, g->playMenu)) {
+		g->PlayGameSound(g->ChBoton);
 		g->SetStage(LEVEL);
 		printf("Play\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 200, 600, 100, g->restartMenu)) {
-		g->PlayGameSound(g->boton);
+	else if (Stage::RenderButton(g->window_width / 2, 290, 300, 50, g->restartMenu)) {
+		g->PlayGameSound(g->ChBoton);
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 300, 600, 100, g->saveMenu)) {
+	else if (Stage::RenderButton(g->window_width / 2, 350, 300, 50, g->saveMenu)) {
 		Stage::saveLevel();
-		g->PlayGameSound(g->boton);
+		g->PlayGameSound(g->ChBoton);
 		printf("Save\n");
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 400, 600, 100, g->ctrlsMenu)) {
-		g->PlayGameSound(g->boton);
+	else if (Stage::RenderButton(g->window_width / 2, 410, 300, 50, g->ctrlsMenu)) {
+		g->PlayGameSound(g->ChBoton);
 		printf("Controls\n");
 		g->SetStage(CONTROLS);
 	}
-	else if (Stage::RenderButton(g->window_width / 2, 500, 600, 100, g->exitMenu)) {
-		g->PlayGameSound(g->AudioExit);
+	else if (Stage::RenderButton(g->window_width / 2, 470, 300, 50, g->exitMenu)) {
+		g->PlayGameSound(g->ChAudioExit);
+		g->PlayGameSound(g->ChIntroMusic, true);
 		printf("Exit\n");
         g->SetStage(INTRO);
 	}
@@ -481,6 +487,7 @@ void Menu::Render(bool cameraLocked) {
 }
 void Menu::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
+	slowMotion = false;
 	cameraLocked = true;
 
 	SDL_ShowCursor(true);
@@ -497,6 +504,8 @@ void Menu::onKeyDown(SDL_KeyboardEvent event) {
 
 Intro::Intro() {
     wasLeftMousePressed = false;
+	
+	
 }
 void Intro::Render(bool cameraLocked) {
     Game* g = Game::instance;
@@ -511,7 +520,8 @@ void Intro::Render(bool cameraLocked) {
 	Stage::RenderGUI(g->window_width / 2, 50, 240, 40, g->playMenu);
     
     if (Stage::RenderButton(g->window_width / 6, 150, 120, 20, g->newGame)) {
-		g->PlayGameSound(g->boton);
+		g->PlayGameSound(g->ChBoton);
+		g->StopGameSound(g->ChIntroMusic);
 		currentLevel = 0;
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
         g->SetStage(LEVEL);
@@ -520,17 +530,18 @@ void Intro::Render(bool cameraLocked) {
     else if (Stage::RenderButton(g->window_width / 6, 200, 120, 20, g->load)) {
 		currentLevel = loadLevel();
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
-		g->PlayGameSound(g->boton);
+		g->PlayGameSound(g->ChBoton);
+		g->StopGameSound(g->ChIntroMusic);
         g->SetStage(LEVEL);
         printf("Load Game\n");
     }
 	else if (Stage::RenderButton(g->window_width / 6, 250, 120, 20, g->ctrls)) {
-		g->PlayGameSound(g->boton);
+		g->PlayGameSound(g->ChBoton);
 		g->SetStage(CONTROLS);
 		printf("Load Game\n");
 	}
     else if (Stage::RenderButton(g->window_width / 6, 300, 120, 20, g->exit)) {
-		g->PlayGameSound(g->AudioExit);
+		g->PlayGameSound(g->ChAudioExit);
         printf("Exit\n");
         g->must_exit = true;
     }
@@ -541,6 +552,7 @@ void Intro::Render(bool cameraLocked) {
 
 
 void Intro::Update(float seconds_elapsed, bool &cameraLocked) {
+	slowMotion = false;
     Game* g = Game::instance;
     cameraLocked = true;
 
@@ -567,7 +579,7 @@ void Controls::Render(bool cameraLocked) {
 	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->controls);
 
 	if (Stage::RenderButton(g->window_width / 2, 550, 240, 40, g->back)) {
-		g->PlayGameSound(g->boton);
+		g->PlayGameSound(g->ChBoton);
 		if (g->previousStage == STAGE_ID::INTRO) {
 			g->SetStage(INTRO);
 		}
@@ -581,8 +593,8 @@ void Controls::Render(bool cameraLocked) {
 }
 
 
-
 void Controls::Update(float seconds_elapsed, bool& cameraLocked) {
+	slowMotion = false;
 	Game* g = Game::instance;
 	cameraLocked = true;
 

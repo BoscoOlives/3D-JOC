@@ -58,6 +58,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	currentStage = STAGE_ID::INTRO;
 	GetCurrent()->world.InitBullets(mesh_bullet, texture_bullet);
 
+	PlayGameSound(ChIntroMusic, true);//llançem la musica del joc
+
+
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
@@ -436,6 +439,8 @@ void Game::loadTexturesAndMeshes() {
 	saveMenu = Texture::Get("data/gui/saveMenu.png");
     exitMenu = Texture::Get("data/gui/exitMenu.png");
     ctrlsMenu = Texture::Get("data/gui/ctrlsMenu.png");
+	menuBorder = Texture::Get("data/gui/menuBorder.png");
+
     
 	exit = Texture::Get("data/gui/exit_.png");
 	volumeOn = Texture::Get("data/gui/save.png");
@@ -520,23 +525,24 @@ HSAMPLE Game::LoadSample(const char* fileName) {
 	std::cout << " + AUDIO load" << fileName << std::endl;
 	return hSample;
 }
-void Game::PlayGameSound(HSAMPLE fileSample) {
-	
-
-	//El handler para un canal
-	HCHANNEL hSampleChannel;
-
-	//Creamos un canal para el sample
-	hSampleChannel = BASS_SampleGetChannel(fileSample, false);
+void Game::PlayGameSound(HCHANNEL fileSample, bool LOOP) {
 
 	//si esteim en SlowMotion, baixam la freq. de mostreig de canal (original = 44100Hz)
-	if(GetCurrent()->slowMotion){ BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 15000); }
-	else { BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_FREQ, 0); }
+	if(GetCurrent()->slowMotion){ BASS_ChannelSetAttribute(fileSample, BASS_ATTRIB_FREQ, 15000); }
+	else { BASS_ChannelSetAttribute(fileSample, BASS_ATTRIB_FREQ, 0); }
 	
-	BASS_ChannelSetAttribute(hSampleChannel, BASS_ATTRIB_VOL, 0.5); //volumen del dispar (el podriem controlar amb una variable des del menu!
+	BASS_ChannelSetAttribute(fileSample, BASS_ATTRIB_VOL, 0.5); //volumen del dispar (el podriem controlar amb una variable des del menu!
+	
+	if(LOOP){ BASS_ChannelSetAttribute(fileSample, BASS_SAMPLE_LOOP, 0); }
 	//Lanzamos un sample
-	BASS_ChannelPlay(hSampleChannel, true);
+	BASS_ChannelPlay(fileSample, true);
 
+}
+
+void Game::StopGameSound(HCHANNEL fileSample) {
+
+	//Lanzamos un stop
+	BASS_ChannelStop(fileSample);
 
 }
 void Game::LoadAllSamples() {
@@ -546,6 +552,16 @@ void Game::LoadAllSamples() {
 	hit_player = LoadSample("data/audios/hit_player.wav");
 	boton = LoadSample("data/audios/boton.wav");
 	AudioExit = LoadSample("data/audios/exit.wav");
+	introMusic = LoadSample("data/audios/Elevxte.mp3");
+
+	//El handler para un canal
+	ChShoot = BASS_SampleGetChannel(shoot, false);
+	ChRecoil = BASS_SampleGetChannel(recoil, false);
+	ChHit_enemy = BASS_SampleGetChannel(hit_enemy, false);
+	ChHit_Player = BASS_SampleGetChannel(hit_player, false);
+	ChBoton = BASS_SampleGetChannel(boton, false);
+	ChAudioExit = BASS_SampleGetChannel(AudioExit, false);
+	ChIntroMusic = BASS_SampleGetChannel(introMusic, false);
 }
 
 //bool Game::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV ) {

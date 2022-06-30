@@ -83,12 +83,7 @@ public:
 	//Matrix44 playerModel;
 	Animation* anim_idle;
 	Animation* anim_run;
-	HSAMPLE shoot;
-	HSAMPLE recoil;
-	HSAMPLE hit_enemy;
-	HSAMPLE hit_player;
-	HSAMPLE boton;
-	HSAMPLE AudioExit;
+	
 	//iluminacio
 	Shader* phong_shader = NULL;
 	Light* light = NULL;
@@ -120,10 +115,27 @@ public:
     Texture* restartMenu;
     Texture* playMenu;
     Texture* saveMenu;
+    Texture* menuBorder;
 
 	Texture* nexetLevel;
     
     Texture* titleBackground;
+
+	//Audios and Channels
+	HSAMPLE shoot;
+	HCHANNEL ChShoot;
+	HSAMPLE recoil;
+	HCHANNEL ChRecoil;
+	HSAMPLE hit_enemy;
+	HCHANNEL ChHit_enemy;
+	HSAMPLE hit_player;
+	HCHANNEL ChHit_Player;
+	HSAMPLE boton;
+	HCHANNEL ChBoton;
+	HSAMPLE AudioExit;
+	HCHANNEL ChAudioExit;
+	HSAMPLE introMusic;
+	HCHANNEL ChIntroMusic;
 
 	std::vector<Stage*> stages;
 	STAGE_ID currentStage;
@@ -150,7 +162,8 @@ public:
 	void loadTexturesAndMeshes();
 	void initAudio();
 	HSAMPLE LoadSample(const char* fileName);
-	void PlayGameSound(HSAMPLE fileSample);
+	void PlayGameSound(HCHANNEL fileSample, bool LOOP = false);
+	void StopGameSound(HCHANNEL fileSample);
 	void LoadAllSamples();
 	//void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);
 	//bool RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color = Vector4(1, 1, 1, 1), bool flipYV = true);
