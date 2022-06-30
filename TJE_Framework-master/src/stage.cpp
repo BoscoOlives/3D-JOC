@@ -93,14 +93,16 @@ Level::Level() {
 	player_entity = new Entity(playerModel, g->mesh_pistol, g->texture_pistol); //creem la entitat Jugador
 	currentLevel = 0;
 
-	levelsWorld.reserve(2);
-	levelsWorld.push_back("world_scene0.txt");
-	levelsWorld.push_back("world_scene1.txt");
+	levelsWorld.reserve(3);
+	levelsWorld.push_back("data/levels/world_scene0.txt");
+	levelsWorld.push_back("data/levels/world_scene1.txt");
+	levelsWorld.push_back("data/levels/world_scene2.txt");
 
 
-	levelsEnemies.reserve(2);
-	levelsEnemies.push_back("enemies0.txt");
-	levelsEnemies.push_back("enemies1.txt");
+	levelsEnemies.reserve(3);
+	levelsEnemies.push_back("data/levels/enemies0.txt");
+	levelsEnemies.push_back("data/levels/enemies1.txt");
+	levelsEnemies.push_back("data/levels/enemies2.txt");
 	
 	world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 
@@ -289,7 +291,7 @@ void NextLevel::Render(bool cameraLocked) {
 
 	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->nexetLevel);
 	
-	std::string text_nextLevel = "PRESS SPACE TO CONTINUE\n	ESC to Menu		";
+	std::string text_nextLevel = "PRESS SPACE TO CONTINUE\n	      ESC to Menu      ";
 	drawText(g->window_width /3, 450, text_nextLevel, Vector3(1, 1, 1), 2);
 }
 void NextLevel::Update(float seconds_elapsed, bool &cameraLocked) {
@@ -329,7 +331,7 @@ void YouDied::Render(bool cameraLocked) {
 		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
-	std::string text_youDied = "PRESS SPACE TO RESTART\n       ESC to Menu     	";
+	std::string text_youDied = "PRESS SPACE TO RESTART\n       ESC to INIT     	";
 	drawText(g->window_width / 3, 550, text_youDied, Vector3(1, 1, 1), 2);
 	wasLeftMousePressed = false;
 }
@@ -347,7 +349,8 @@ void YouDied::Update(float seconds_elapsed, bool& cameraLocked) {
 	}
 
 	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
-		g->SetStage(MENU);
+		g->ChBoton = g->PlayGameSound(g->boton);
+		g->SetStage(INTRO);
 		return; //acabar el update
 	}
 	
@@ -371,6 +374,8 @@ void Final::Render(bool cameraLocked) {
 
 	if (Stage::RenderButton(40, 20, 120, 20, g->exitMenu)) {
 		g->ChBoton = g->PlayGameSound(g->boton);
+		g->ChIntroMusic = g->PlayGameSound(g->introMusic);
+		g->StopGameSound(g->ChAmbient);
 		g->SetStage(INTRO);
 		printf("intro (end game)\n");
 	}
@@ -663,11 +668,12 @@ void Controls::Render(bool cameraLocked) {
 		g->ChBoton = g->PlayGameSound(g->boton);
 		if (g->previousStage == STAGE_ID::INTRO) {
 			g->SetStage(INTRO);
+			printf("Intro\n");
 		}
 		if (g->previousStage == STAGE_ID::MENU) {
 			g->SetStage(MENU);
+			printf("Menu\n");
 		}
-		printf("Menu\n");
 	}
 
 	wasLeftMousePressed = false;
@@ -681,8 +687,18 @@ void Controls::Update(float seconds_elapsed, bool& cameraLocked) {
 
 	SDL_ShowCursor(true);
 	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {
-		g->SetStage(MENU);
-		return; //acaba el update
+		g->ChBoton = g->PlayGameSound(g->boton);
+		if (g->previousStage == STAGE_ID::INTRO) {
+			g->SetStage(INTRO);
+			printf("Intro\n");
+			return; //acaba el update
+		}
+		if (g->previousStage == STAGE_ID::MENU) {
+			g->SetStage(MENU);
+			printf("Menu\n");
+			return; //acaba el update
+		}
+		
 	}
 }
 void Controls::onKeyDown(SDL_KeyboardEvent event) {

@@ -200,10 +200,12 @@ void Player::checkColisions(Vector3 playerVel, std::vector<Entity*> entities, fl
 void Player::setSpawnPoint(int currentLevel) {
     Vector3 level0 = { -4.0f, 0.0f, -10.5f };
     Vector3 level1 = { -0.95f, 0.0f, 1.0f };
+    Vector3 level2 = { -0.05f, 0.0f, 3.04f };
 
     std::vector<Vector3> spawnPointsLevels;
     spawnPointsLevels.push_back(level0);
     spawnPointsLevels.push_back(level1);
+    spawnPointsLevels.push_back(level2);
 
 
     pos = spawnPointsLevels[currentLevel];

@@ -59,43 +59,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
 
-void Game::preRender(void) {
-	//set the clear color (the background color)
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-
-	// Clear the window and the depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//set flags
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	camera->enable();
-
-	Texture* loadScreen = Texture::Get("data/gui/LoadScreen.png");
-	Mesh quad;
-	quad.createQuad(window_width/2, window_height/2, window_width, window_height, true);
-
-	Camera cam2D;
-	cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
-
-	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	if (!shader) return;
-	shader->enable();
-	shader->setUniform("u_color", Vector4(1,1,1,1));
-	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
-	if (loadScreen != NULL) {
-		shader->setUniform("u_texture", loadScreen, 0);
-	}
-	shader->setUniform("u_time", time);
-	//shader->setUniform("u_tex_tiling", 1.0f);
-	shader->setUniform("u_model", Matrix44());
-	quad.render(GL_TRIANGLES);
-	shader->disable();
-
-	SDL_GL_SwapWindow(this->window);
-}
-
 //what to do when the image has to be draw
 void Game::render(void)
 {
@@ -200,9 +163,6 @@ void Game::loadTexturesMeshesAnimationsShaders() {
 
     
 	exit = Texture::Get("data/gui/exit_.png");
-	volumeOn = Texture::Get("data/gui/save.png");
-	volumeOff = Texture::Get("data/gui/exit.png");
-	nexetLevel = Texture::Get("data/levels/nextlevel.png");
 	controls = Texture::Get("data/gui/controls.png");
 	back = Texture::Get("data/gui/back.png");
 	load = Texture::Get("data/gui/load.png");
@@ -211,33 +171,34 @@ void Game::loadTexturesMeshesAnimationsShaders() {
 	title = Texture::Get("data/gui/title.png");
 	
     
+	nexetLevel = Texture::Get("data/gui/nextlevel.png");
     titleBackground = Texture::Get("data/gui/titleBackground.png");
 	youDied = Texture::Get("data/gui/youdied.png");
 	finalScreen = Texture::Get("data/gui/finalScreen.png");
 
 
 
-	mesh_sphere = Mesh::Get("data/sphere.obj");
+	//mesh_sphere = Mesh::Get("data/sphere.obj");
 
 	mesh_ground = new Mesh();
 	mesh_ground->createPlane(30);
-	texture_ground = Texture::Get("data/ground.png");
+	texture_ground = Texture::Get("data/levels/ground.png");
 	
-	mesh_pistol = Mesh::Get("data/pistol.obj");
+	mesh_pistol = Mesh::Get("data/levels/obj_player/pistol.obj");
 
-	mesh_pistol_e = Mesh::Get("data/pistol_enemy.obj");
-	texture_pistol  = Texture::Get("data/color-atlas-new.png");
+	mesh_pistol_e = Mesh::Get("data/levels/obj_player/pistol_enemy.obj");
+	texture_pistol  = Texture::Get("data/levels/obj_player/color-atlas-new.png");
 
 	texture_sky = Texture::Get("data/sky/spaceclouds.png");
 	mesh_sky = Mesh::Get("data/sky/sky.ASE");
 
 	
-	mesh_bullet = Mesh::Get("data/bullet_hack.obj");
-	texture_bullet = Texture::Get("data/bullet_hack.png");
+	mesh_bullet = Mesh::Get("data/levels/obj_player/bullet.obj");
+	texture_bullet = Texture::Get("data/levels/obj_player/bullet.png");
 
 	//meshes per carregar in game
-	mesh_rock1 = Mesh::Get("data/rock1.obj");
-	texture_rock1 = Texture::Get("data/rock1.png");
+	mesh_rock1 = Mesh::Get("data/levels/obj_scene/rocksTallOre.obj");
+	texture_rock1 = Texture::Get("data/levels/obj_scene/rocksTallOre.png");
 	mesh_barrel = Mesh::Get("data/levels/obj_scene/barrel.obj");
 	mesh_consoleScreen = Mesh::Get("data/levels/obj_scene/consoleScreen.obj");
 	mesh_SupportCorner = Mesh::Get("data/levels/obj_scene/monorailSupportCorner_exclusive.obj");
@@ -251,7 +212,7 @@ void Game::loadTexturesMeshesAnimationsShaders() {
 	texture_cowboy = Texture::Get("data/animation/westernpack.png");
 	anim_run = Animation::Get("data/animation/cowboy_run.skanim");
 	anim_idle = Animation::Get("data/animation/cowboy_idle.skanim");
-	box_col = Mesh::Get("data/box_colision_enemy.obj");
+	box_col = Mesh::Get("data/levels/obj_player/box_colision_enemy.obj");
 
 	//we load a shader
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
@@ -342,4 +303,41 @@ void Game::InitStages() {
 	stages.push_back(new Menu());
 	stages.push_back(new Controls());
 	stages.push_back(new YouDied());
+}
+
+void Game::preRender(void) {
+	//set the clear color (the background color)
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+
+	// Clear the window and the depth buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//set flags
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	camera->enable();
+
+	Texture* loadScreen = Texture::Get("data/gui/LoadScreen.png");
+	Mesh quad;
+	quad.createQuad(window_width / 2, window_height / 2, window_width, window_height, true);
+
+	Camera cam2D;
+	cam2D.setOrthographic(0, window_width, window_height, 0, -1, 1);
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	if (!shader) return;
+	shader->enable();
+	shader->setUniform("u_color", Vector4(1, 1, 1, 1));
+	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+	if (loadScreen != NULL) {
+		shader->setUniform("u_texture", loadScreen, 0);
+	}
+	shader->setUniform("u_time", time);
+	//shader->setUniform("u_tex_tiling", 1.0f);
+	shader->setUniform("u_model", Matrix44());
+	quad.render(GL_TRIANGLES);
+	shader->disable();
+
+	SDL_GL_SwapWindow(this->window);
 }
