@@ -16,7 +16,6 @@
 #include "texture.h"
 #include "fbo.h"
 #include "shader.h"
-//#include <bass.h>
 #include "extra/bass.h"	
 #include "stage.h"
 #include "bullet.h"
@@ -45,19 +44,12 @@ public:
 	bool mouse_locked; //tells if the mouse is locked (not seen)
 	bool cameraLocked;
 	//Variables	BOSCO &	RICCI
-	/*std::vector<Entity*> entities;
-	std::vector<Entity*> enemies;
-	std::vector<Entity*> bullets;
-	std::vector<Vector3> points;*/
-	//std::vector<Player*> player_enemies;
+
     Entity* selectedEntity = NULL;
-	//Entity* player_entity = NULL;
-	//World world;
-	//Player* player = &world.player;
+
 	Texture* texture_black = NULL;
 	Texture* texture_white = NULL;
-	//bool slowMotion;
-	//bool cameraLocked;
+
 	float mouse_speed;
 	Mesh* mesh_sky = NULL;
 	Mesh* mesh_pistol = NULL;
@@ -80,7 +72,6 @@ public:
 	Shader* anim_shader = NULL;
 	Animation* anim = NULL;
 	FBO* fbo = NULL;
-	//Matrix44 playerModel;
 	Animation* anim_idle;
 	Animation* anim_run;
 	
@@ -98,9 +89,6 @@ public:
 
 
 	//botons
-	//Texture* play;
-	//Texture* restart;
-	//Texture* save;
 	Texture* exit;
 	Texture* volumeOn;
 	Texture* volumeOff;
@@ -109,6 +97,8 @@ public:
 	Texture* load;
 	Texture* newGame;
 	Texture* ctrls;
+	Texture* restartBlack;
+	Texture* title;
     
     Texture* ctrlsMenu;
     Texture* exitMenu;
@@ -118,8 +108,9 @@ public:
     Texture* menuBorder;
 
 	Texture* nexetLevel;
-    
+    Texture* youDied;
     Texture* titleBackground;
+    Texture* finalScreen;
 
 	//Audios and Channels
 	HSAMPLE shoot;
@@ -136,6 +127,8 @@ public:
 	HCHANNEL ChAudioExit;
 	HSAMPLE introMusic;
 	HCHANNEL ChIntroMusic;
+	HSAMPLE ambient;
+	HCHANNEL ChAmbient;
 
 	std::vector<Stage*> stages;
 	STAGE_ID currentStage;
@@ -159,10 +152,11 @@ public:
 	void onResize(int width, int height);
 
 	//funcions BOSCO & RICCI
-	void loadTexturesAndMeshes();
+	void preRender(void);
+	void loadTexturesMeshesAnimationsShaders();
 	void initAudio();
 	HSAMPLE LoadSample(const char* fileName);
-	void PlayGameSound(HCHANNEL fileSample, bool LOOP = false);
+	HCHANNEL PlayGameSound(HSAMPLE fileSample, bool LOOP = false, float vol = 0.5);
 	void StopGameSound(HCHANNEL fileSample);
 	void LoadAllSamples();
 	//void RenderGUI(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV);

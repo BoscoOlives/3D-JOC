@@ -64,8 +64,8 @@ public:
     void get_Mesh_Texture_Entity(int id, Mesh*& mesh, Texture*& texture);
     void shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorld, std::vector<char*> levelsEnemies, int currentLevel);
     Vector3 Lerp(Vector3 a, Vector3 b, float t);
-    void creteGrid();
-    void renderPath(bool cameraLocked);
+    //void creteGrid();
+    //void renderPath(bool cameraLocked);
     float sign(float value);
     void restartWorld(std::vector<char*> levelsWorld, std::vector<char*> levelsEnemies, int currentLevel);
     int GetFreeBullet();

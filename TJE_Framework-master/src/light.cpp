@@ -5,18 +5,18 @@
 Light::Light()
 {
 	//Illumination Elements
-	//position.set(72, 38, 25);
 	position.set(15, 8, 9);
 	sun_color.set(0.560, 0.560, 0.560);
 	//specular_color.set(0.31, 0.31, 0.31);
 
 	//Material Elements
 	ambient.set(0.8, 0.8, 0.8); //reflected ambient light
-	diff_factor.set(0.870, 0.75, 0.75); //reflected diffuse light
-	spec_factor.set(0.2, 0.2, 0.2); //reflected specular light
-	glossiness = 20.0; //glosiness coefficient (plasticity)
+	//diff_factor.set(0.905, 0.866, 0.815); //reflected diffuse light
+	diff_factor.set(0.3, 0.3, 0.3); //reflected diffuse light
+	spec_factor.set(0.4, 0.4, 0.4); //reflected specular light
+	glossiness = 10.0; //glosiness coefficient (plasticity)
 	//https://doc.instantreality.org/tools/color_calculator/
-	ambient_light = { 0.952, 0.823, 0.768 }; //here we can store the global ambient light of the scene
+	ambient_light = { 0.866, 0.784, 0.674 }; //here we can store the global ambient light of the scene
 }
 
 void Light::calcKaia() {
@@ -34,7 +34,7 @@ void Light::illumination(Shader* a_shader, Camera* cam) {
 	a_shader->setVector3("spec_factor", spec_factor);
 
 	a_shader->setFloat("glossiness", glossiness);
-	a_shader->setVector3("camera_eye", cam->eye);
+	a_shader->setVector3("camera_eye", cam->eye );
 
 }
 

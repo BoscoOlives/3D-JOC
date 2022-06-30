@@ -68,8 +68,8 @@ void Player::Shoot(int primitive, Camera* cam, Shader* a_shader, bool cameraLock
     bullet->entity_bullet->dir = dir;
     bullet->entity_bullet->yaw = this->yaw;
 
-    g->PlayGameSound(g->ChShoot);
-    //g->PlayGameSound(g->ChRecoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
+    g->ChShoot = g->PlayGameSound(g->shoot);
+    //g->ChRecoil = g->PlayGameSound(g->recoil); //de moment el deix comentat perque van massa seguits els dos audios i no m'acaba de molar
 }
 
 Matrix44 Player::Coil(float elapsed_time, Matrix44 gun) {
@@ -117,8 +117,8 @@ void Player::AIEnemy(float elapsed_time, Player* player, std::vector<Entity*> en
         else {
             if (dist > 2.0f) { //que no s'atraqui més de 2 unitats 
                 Vector3 playerVel = forward * 1.0f * elapsed_time;
-                this->checkColisions(playerVel, entities, elapsed_time, 0.3f); //abans de canviar la posicio mira si colisiona
-                this->checkColisions(playerVel, enemies, elapsed_time, 0.03f);
+                this->checkColisions(playerVel, entities, elapsed_time, 0.4f); //abans de canviar la posicio mira si colisiona amb entitats
+                this->checkColisions(playerVel, enemies, elapsed_time, 0.03f); // i enemics
 
                 //if (this->collidingWithEntities) {
                     //pos = pos + Vector3(0.02f, 0.0f, 0.0f);

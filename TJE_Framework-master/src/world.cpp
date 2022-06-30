@@ -269,7 +269,7 @@ void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorl
             continue;
         }
         Entity* entity = currentBullet->entity_bullet; // cercam les BULLETS
-        float vel = 5.0f;
+        float vel = 8.0f;
         entity->update_position_moving(g->elapsed_time, vel);
             
         Vector3 bullet_center = entity->model.getTranslation();
@@ -316,7 +316,7 @@ void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorl
                 Vector3 pos; Vector3 normal;
                 //if (currentEnemy->mesh->testRayCollision(currentEnemy->model, bullet_center, entity->dir, pos, normal, 0.5f)) {
                     //printf("COLLISION BULLET WITH ENEMY\n");
-                    g->PlayGameSound(g->ChHit_enemy);
+                g->ChHit_enemy = g->PlayGameSound(g->hit_enemy);
                     enemies.erase(enemies.begin() + j);//si l'esfera col·lisiona, elimina a la enitat enemic
                     player_enemies.erase(player_enemies.begin() + j);//si l'esfera col·lisiona, elimina al player enemic
                     currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
@@ -329,9 +329,10 @@ void World::shooting_update(Entity*& entityPlayer, std::vector<char*> levelsWorl
         Vector3 collnorm;
         if (g->box_col->testSphereCollision(entityPlayer->model, bullet_center, 0.1, coll, collnorm ) && currentBullet->author != player.id) {
             printf("YOU DIE!\n");
-            g->PlayGameSound(g->ChHit_Player);
+            g->ChHit_Player = g->PlayGameSound(g->hit_player);
             currentBullet->isActive = false;//si la bala col·lisiona, elimina la bala
             //restartWorld(levelsWorld, levelsEnemies, currentLevel); //reset del level
+            g->SetStage(STAGE_ID::YOUDIED);
             continue;
         }
 
@@ -345,31 +346,7 @@ Vector3 World::Lerp(Vector3 a, Vector3 b, float t) {
     return a + (ab * t);
 }
 
-void World::creteGrid() {
-    //pathfinding
-    map_grid = new uint8[W*H];
-    for (size_t i = 0; i < W*H; i++) {
-        map_grid[i] = 1;
-    }
-}
-void World::renderPath(bool cameraLocked) {
-    Game* g = Game::instance;
-    //pathfinding
-    if (path_steps > 0) {
-        Mesh m;
-        for (size_t i = 0; i < path_steps; i++) {
-            int index = output[i];
-            int x = index % W;
-            int y = index / W;
-            Vector3 pos;
-            pos.x = x * tileSizeX;
-            pos.z = y * tileSizeY;
-            m.vertices.push_back(pos);
-        }
-        Entity pathfinding = Entity(Matrix44(), &m, g->texture_black);
-        pathfinding.RenderEntity(GL_LINE_STRIP, g->shader, g->camera, cameraLocked);
-    }
-}
+
 float World::sign(float value) {
     return value >= 0.0f ? 1.0f : -1.0f;
 }
@@ -406,7 +383,7 @@ void World::RenderBullets(Camera* cam, Shader* shader, bool cameraLocked) {
             continue;
         }
         Entity* entity = currentBullet->entity_bullet;
-        currentBullet->entity_bullet->RenderEntity(GL_TRIANGLES, shader, cam, cameraLocked); //NOTA AQUI NO SA ESTA PINTANT
+        currentBullet->entity_bullet->RenderEntity(GL_TRIANGLES, shader, cam, cameraLocked);
 
     }
 }
@@ -419,9 +396,40 @@ void World::InitBullets(Mesh* mesh, Texture* texture) {
     }
 }
 
-bool World::checkEnemies() {
+bool World::checkEnemies() { //serveix per veure si queden enemics vius al NIVELL
     if (enemies.size() == 0) {
         return true;
     }
     return false;
 }
+
+
+/* Les funcions createGrid i renderPath no s'han acabat utilitzant ja que al
+implementar PathFinding + IA Enemys han surgit varis errors que no donava temps a resoldre*/
+
+/*
+void World::creteGrid() {
+    //pathfinding
+    map_grid = new uint8[W * H];
+    for (size_t i = 0; i < W * H; i++) {
+        map_grid[i] = 1;
+    }
+}
+void World::renderPath(bool cameraLocked) {
+    Game* g = Game::instance;
+    //pathfinding
+    if (path_steps > 0) {
+        Mesh m;
+        for (size_t i = 0; i < path_steps; i++) {
+            int index = output[i];
+            int x = index % W;
+            int y = index / W;
+            Vector3 pos;
+            pos.x = x * tileSizeX;
+            pos.z = y * tileSizeY;
+            m.vertices.push_back(pos);
+        }
+        Entity pathfinding = Entity(Matrix44(), &m, g->texture_black);
+        pathfinding.RenderEntity(GL_LINE_STRIP, g->shader, g->camera, cameraLocked);
+    }
+}*/

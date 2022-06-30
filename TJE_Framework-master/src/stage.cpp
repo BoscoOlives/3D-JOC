@@ -13,9 +13,7 @@ std::vector<char*> Stage::levelsWorld;
 std::vector<char*> Stage::levelsEnemies;
 int Stage::currentLevel;
 bool Stage::slowMotion;
-//Stage::Stage() {
-//
-//}
+
 
 bool Stage::RenderButton(float x, float y, float w, float h, Texture* texture, Vector4 color, bool flipYV) {
 	Vector2 mouse = Input::mouse_position;
@@ -188,12 +186,20 @@ void Level::Update(float seconds_elapsed, bool &cameraLocked) {
 	}
 	
 	if (world.checkEnemies()) { // si ja no hi ha enemics, 
-		g->SetStage(NEXTLEVEL);
+
+		if (currentLevel == (levelsWorld.size() - 1)) { // si no queden NIVELLS, pantalla final
+			printf("FinalScreen\n");
+			g->ChBoton = g->PlayGameSound(g->boton);
+			g->SetStage(FINAL);
+			return; //acabar el update
+		}
+		else {
+			g->SetStage(NEXTLEVEL);
+		}
 		return;
 	}
 	slowMotion = true;	
 	float playerSpeed = 2.5f * g->elapsed_time;
-	float rotSpeed = 120.0f * g->elapsed_time;
 
 	Input::centerMouse();
 	
@@ -258,7 +264,6 @@ void Level::renderSkyGround(Camera* camera, bool cameraLocked){
 		g->shader->setUniform("u_texture", g->texture_ground, 0);
 	}
 	g->shader->setUniform("u_time", g->time);
-	//g->shader->setUniform("u_tex_tiling", tiling);
 	g->shader->setUniform("u_model", groundModel);
 	g->mesh_ground->render(GL_TRIANGLES);
 	g->shader->disable();
@@ -291,10 +296,6 @@ void NextLevel::Update(float seconds_elapsed, bool &cameraLocked) {
 	Game* g = Game::instance;
 	slowMotion = false;
 	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {  // TECLA ESC
-		if (currentLevel == levelsWorld.size()){
-			g->SetStage(INTRO); //posar FINAL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			return; //acabar el update
-		}
 		currentLevel += 1;
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
@@ -310,14 +311,90 @@ void NextLevel::onKeyDown(SDL_KeyboardEvent event) {
 
 }
 
-Final::Final() {
+YouDied::YouDied() {
+	wasLeftMousePressed = false;
+}
+void YouDied::Render(bool cameraLocked) {
+	Game* g = Game::instance;
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->youDied);
+
+	if (Stage::RenderButton(g->window_width / 2, 450, 250, 42, g->restartBlack)) {
+		g->ChBoton = g->PlayGameSound(g->boton);
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		g->SetStage(LEVEL);
+		printf("Restart\n");
+	}
+	std::string text_youDied = "PRESS SPACE TO RESTART\n       ESC to Menu     	";
+	drawText(g->window_width / 3, 550, text_youDied, Vector3(1, 1, 1), 2);
+	wasLeftMousePressed = false;
+}
+void YouDied::Update(float seconds_elapsed, bool& cameraLocked) {
+	Game* g = Game::instance;
+	slowMotion = false;
+	cameraLocked = true;
+	SDL_ShowCursor(true);
+	
+	if(Input::wasKeyPressed(SDL_SCANCODE_SPACE)){
+		g->ChBoton = g->PlayGameSound(g->boton);
+		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
+		g->SetStage(LEVEL);
+		printf("Restart\n");
+	}
+
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
+		g->SetStage(MENU);
+		return; //acabar el update
+	}
+	
+
+}
+void YouDied::onKeyDown(SDL_KeyboardEvent event) {
+
+}
+
+Final::Final() {
+	wasLeftMousePressed = false;
 }
 void Final::Render(bool cameraLocked) {
+	Game* g = Game::instance;
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->finalScreen);
+
+	if (Stage::RenderButton(40, 20, 120, 20, g->exitMenu)) {
+		g->ChBoton = g->PlayGameSound(g->boton);
+		g->SetStage(INTRO);
+		printf("intro (end game)\n");
+	}
+
+	wasLeftMousePressed = false;
 }
 void Final::Update(float seconds_elapsed, bool &cameraLocked) {
+	Game* g = Game::instance;
 	slowMotion = false;
+	cameraLocked = true;
+	SDL_ShowCursor(true);
+
+	if (Input::wasKeyPressed(SDL_SCANCODE_SPACE)) {
+		g->ChBoton = g->PlayGameSound(g->boton);
+		g->ChIntroMusic = g->PlayGameSound(g->introMusic);
+		g->StopGameSound(g->ChAmbient);
+		g->SetStage(INTRO);
+		printf("intro (end game)\n");
+	}
+
+	if (Input::wasKeyPressed(SDL_SCANCODE_ESCAPE)) {  // TECLA ESC
+		g->SetStage(MENU);
+		return; //acabar el update
+	}
 }
 void Final::onKeyDown(SDL_KeyboardEvent event) {
 	
@@ -342,7 +419,7 @@ void EditMode::Render(bool cameraLocked) {
 	drawGrid();
 
 	//Pathfinding
-	world.renderPath(cameraLocked);
+	//world.renderPath(cameraLocked);
 
 }
 void EditMode::Update(float seconds_elapsed, bool &cameraLocked) {
@@ -387,7 +464,7 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 	case SDLK_6:  world.DeleteEntity(g->camera); break;
 	case SDLK_0: world.saveEnemies(levelsEnemies[currentLevel]); break;
 		//path finding
-	case SDLK_7: {
+	/*case SDLK_7: {
 		Vector2 mouse = Input::mouse_position;
 		Game* g = Game::instance;
 		Vector3 dir = g->camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
@@ -396,43 +473,41 @@ void EditMode::onKeyDown(SDL_KeyboardEvent event) {
 		Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
 		world.start_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
 		world.start_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
-		//printf("(start_x, start_y) = (%d, %d)\n", start_x, start_y);
-		break;
-	}
-	case SDLK_8: {
-		Vector2 mouse = Input::mouse_position;
-		Game* g = Game::instance;
-		Vector3 dir = g->camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
-		Vector3 rayOrigin = g->camera->eye;
-
-		Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
-		world.target_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
-		world.target_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
-
-		//printf("(target_x, target_y) = (%d, %d)\n", target_x, target_y);
-
-
-		world.path_steps = AStarFindPathNoTieDiag(
-			world.start_x, world.start_y, //origin (tienen que ser enteros)
-			world.target_x, world.target_y, //target (tienen que ser enteros)
-			world.map_grid, //pointer to map data
-			world.W, world.H, //map width and height
-			world.output, //pointer where the final path will be stored
-			100); //max supported steps of the final path
-
-	//check if there was a path
-		if (world.path_steps != -1)
-		{
-			for (int i = 0; i < world.path_steps; ++i)
-				std::cout << "X: " << (world.output[i] % world.W) << ", Y: " << floor(world.output[i] / world.W) << std::endl;
-		}
-		else {
-			printf("No paths.\n");
-		}
-
 
 		break;
-	}
+	}*/
+	//case SDLK_8: {
+	//	Vector2 mouse = Input::mouse_position;
+	//	Game* g = Game::instance;
+	//	Vector3 dir = g->camera->getRayDirection(mouse.x, mouse.y, g->window_width, g->window_height);
+	//	Vector3 rayOrigin = g->camera->eye;
+
+	//	Vector3 spawnPos = RayPlaneCollision(Vector3(), Vector3(0, 1, 0), rayOrigin, dir);
+	//	world.target_x = clamp(spawnPos.x / world.tileSizeX, 0, world.W);
+	//	world.target_y = clamp(spawnPos.z / world.tileSizeY, 0, world.H);
+
+
+	//	world.path_steps = AStarFindPathNoTieDiag(
+	//		world.start_x, world.start_y, //origin (tienen que ser enteros)
+	//		world.target_x, world.target_y, //target (tienen que ser enteros)
+	//		world.map_grid, //pointer to map data
+	//		world.W, world.H, //map width and height
+	//		world.output, //pointer where the final path will be stored
+	//		100); //max supported steps of the final path
+
+	////check if there was a path
+	//	if (world.path_steps != -1)
+	//	{
+	//		for (int i = 0; i < world.path_steps; ++i)
+	//			std::cout << "X: " << (world.output[i] % world.W) << ", Y: " << floor(world.output[i] / world.W) << std::endl;
+	//	}
+	//	else {
+	//		printf("No paths.\n");
+	//	}
+
+
+	//	break;
+	//}
 	case SDLK_9: world.loadEnemies(levelsEnemies[currentLevel]); break;
 	case SDLK_PLUS: entityToAdd = (entityToAdd + 1) % 4; //canviar enum sense bullet (enum = 11) i el 12 es el enemic
 
@@ -456,29 +531,30 @@ void Menu::Render(bool cameraLocked) {
 	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->menuBorder);
 
 	if (Stage::RenderButton(g->window_width / 2, 230, 300, 50, g->playMenu)) {
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		g->SetStage(LEVEL);
 		printf("Play\n");
 	}
 	else if (Stage::RenderButton(g->window_width / 2, 290, 300, 50, g->restartMenu)) {
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
 		g->SetStage(LEVEL);
 		printf("Restart\n");
 	}
 	else if (Stage::RenderButton(g->window_width / 2, 350, 300, 50, g->saveMenu)) {
 		Stage::saveLevel();
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		printf("Save\n");
 	}
 	else if (Stage::RenderButton(g->window_width / 2, 410, 300, 50, g->ctrlsMenu)) {
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		printf("Controls\n");
 		g->SetStage(CONTROLS);
 	}
 	else if (Stage::RenderButton(g->window_width / 2, 470, 300, 50, g->exitMenu)) {
-		g->PlayGameSound(g->ChAudioExit);
-		g->PlayGameSound(g->ChIntroMusic, true);
+		g->ChAudioExit = g->PlayGameSound(g->AudioExit);
+		g->ChIntroMusic = g->PlayGameSound(g->introMusic);
+		g->StopGameSound(g->ChAmbient);
 		printf("Exit\n");
         g->SetStage(INTRO);
 	}
@@ -515,13 +591,15 @@ void Intro::Render(bool cameraLocked) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, 800, 600, g->titleBackground);
+	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->titleBackground);
     
-	Stage::RenderGUI(g->window_width / 2, 50, 240, 40, g->playMenu);
+	Stage::RenderGUI(g->window_width / 2, 50, g->window_width / 2, int(g->window_height / (2 * 4.5)), g->title);
     
     if (Stage::RenderButton(g->window_width / 6, 150, 120, 20, g->newGame)) {
-		g->PlayGameSound(g->ChBoton);
-		g->StopGameSound(g->ChIntroMusic);
+		g->ChBoton = g->PlayGameSound(g->boton);
+		g->StopGameSound(g->ChIntroMusic); //aturem la musica del Intro
+		g->ChAmbient = g->PlayGameSound(g->ambient, true, 0.3);
+		
 		currentLevel = 0;
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
         g->SetStage(LEVEL);
@@ -530,18 +608,20 @@ void Intro::Render(bool cameraLocked) {
     else if (Stage::RenderButton(g->window_width / 6, 200, 120, 20, g->load)) {
 		currentLevel = loadLevel();
 		world.restartWorld(levelsWorld, levelsEnemies, currentLevel);
-		g->PlayGameSound(g->ChBoton);
-		g->StopGameSound(g->ChIntroMusic);
+		g->ChBoton = g->PlayGameSound(g->boton);
+		g->StopGameSound(g->ChIntroMusic);//aturem la musica del Intro
+		g->ChAmbient = g->PlayGameSound(g->ambient, true, 0.3);
+
         g->SetStage(LEVEL);
         printf("Load Game\n");
     }
 	else if (Stage::RenderButton(g->window_width / 6, 250, 120, 20, g->ctrls)) {
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		g->SetStage(CONTROLS);
 		printf("Load Game\n");
 	}
     else if (Stage::RenderButton(g->window_width / 6, 300, 120, 20, g->exit)) {
-		g->PlayGameSound(g->ChAudioExit);
+		g->ChAudioExit = g->PlayGameSound(g->AudioExit);
         printf("Exit\n");
         g->must_exit = true;
     }
@@ -577,9 +657,10 @@ void Controls::Render(bool cameraLocked) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Stage::RenderGUI(g->window_width / 2, g->window_height / 2, g->window_width, g->window_height, g->controls);
+	
 
 	if (Stage::RenderButton(g->window_width / 2, 550, 240, 40, g->back)) {
-		g->PlayGameSound(g->ChBoton);
+		g->ChBoton = g->PlayGameSound(g->boton);
 		if (g->previousStage == STAGE_ID::INTRO) {
 			g->SetStage(INTRO);
 		}

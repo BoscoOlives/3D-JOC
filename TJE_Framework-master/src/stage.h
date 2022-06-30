@@ -29,7 +29,8 @@ enum STAGE_ID {
     FINAL = 3,
     EDITMODE = 4,
 	MENU = 5,
-    CONTROLS = 6
+    CONTROLS = 6,
+    YOUDIED = 7
 };
 
 
@@ -143,6 +144,21 @@ public:
 
     STAGE_ID GetId() { return STAGE_ID::MENU; };
     Controls();//Constructor
+    void Render(bool cameraLocked);
+    void Update(float seconds_elapsed, bool& cameraLocked);
+    void onKeyDown(SDL_KeyboardEvent event);
+
+};
+
+class YouDied : public Stage {
+public:
+
+    //variables
+    Entity* selectedEntity = NULL;
+
+
+    STAGE_ID GetId() { return STAGE_ID::YOUDIED; };
+    YouDied();//Constructor
     void Render(bool cameraLocked);
     void Update(float seconds_elapsed, bool& cameraLocked);
     void onKeyDown(SDL_KeyboardEvent event);
