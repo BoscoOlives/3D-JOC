@@ -1,4 +1,4 @@
-# 3D-game
+# TIMLESS GUNFIGHT 
 Juego 3D creado por Bosco Olives & Josep Ricci para la asignatura de 'Jocs Electrònics' de la Universidad Pompeu Fabra.
 
 Juego de supervivencia, shooter y completar niveles.
