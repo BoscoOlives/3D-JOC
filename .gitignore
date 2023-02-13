@@ -1,4 +1,3 @@
-.exe
 .iobj
 .ipdb
 .pdb
@@ -14,7 +13,6 @@ visualstudio/
 extra/
 *.ipch
 *.db
-*.exe
 *.iobj
 *.ipdb
 *.pdb
