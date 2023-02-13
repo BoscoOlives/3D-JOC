@@ -12,6 +12,14 @@ https://youtu.be/Fdyf2nsNjMQ
 
 Inspirado en el famoso juego SUPER HOT.
 
+## Test game
+Si se quiere probar el juego, sin compilar el codigo, solo es necesario descargar 5 partes:
+- game.exe
+- bass.dll
+- SDL2.dll
+- carpeta src
+- carpeta data 
+
 ## Contenido
 La carpeta /*src* contiene todas las clases necesarias para ejecutar y compilar el proyecto.
 Existen clases enteras desarrolladas por Javi Agenjo (a modo de framework base para crear el juego).
