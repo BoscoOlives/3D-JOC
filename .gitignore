@@ -3,7 +3,6 @@
 .pdb
 .db
 .d
-.dll
 .ipch
 .opendb
 .DS_store
@@ -18,7 +17,6 @@ extra/
 *.pdb
 *.db
 *.d
-*.dll
 *.ipch
 *.opendb
 *.DS_store
