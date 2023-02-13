@@ -13,7 +13,7 @@ https://youtu.be/Fdyf2nsNjMQ
 Inspirado en el famoso juego SUPER HOT.
 
 ## Test game
-Si se quiere probar el juego, sin compilar el codigo, solo es necesario descargar 5 partes:
+Si se quiere probar el juego, sin compilar el codigo, solo es necesario descargar 5 partes y ejectuar game.exe:
 - game.exe
 - bass.dll
 - SDL2.dll
